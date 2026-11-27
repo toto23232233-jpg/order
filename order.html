@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>藥局訂購</title>
+<style>
+/* 依 visual-spec-gpt.md：米白紙面、深茶綠按鈕、少量朱紅；木紋只在標題列。基準寬 390px，驗收 320–430px。 */
+:root{
+  --page:#FAF6EB; --card:#FFFDF7; --ink:#25291F; --ink2:#5F6459; --line:#D9D2C1;
+  --btn:#123F2A; --btn-ink:#FFFFFF; --sel:#E6EEE1; --tip:#F5ECD7; --ship:#EAF0DF;
+  --red:#A33025; --red-bg:#FBEDEA; --off:#EEEAE0; --off-ink:#6F7066;
+  --wood-d:#6A3D24; --wood-m:#9A6238; --wood-l:#BE8B53;
+  --sh-card:0 2px 8px rgba(58,43,25,.08); --sh-bar:0 -3px 12px rgba(58,43,25,.10);
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--page);color:var(--ink);font-family:"Microsoft JhengHei","Noto Sans TC",system-ui,sans-serif;font-size:16px;line-height:24px;-webkit-text-size-adjust:100%;overflow-x:hidden}
+button,input,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+[hidden]{display:none!important}
+:focus-visible{outline:2px solid var(--btn);outline-offset:2px}
+.wrap{max-width:430px;margin:0 auto;min-height:100vh;background:var(--page)}
+.pad{padding:0 16px}
+.stack{display:flex;flex-direction:column;gap:16px}
+.help{font-size:14px;line-height:21px;color:var(--ink2)}
+
+/* 二、木質中藥櫃標題列 */
+.cab{position:relative;height:64px;display:flex;background:
+  repeating-linear-gradient(92deg,rgba(0,0,0,.05) 0 1px,transparent 1px 7px),
+  repeating-linear-gradient(88deg,rgba(255,255,255,.05) 0 1px,transparent 1px 11px),
+  linear-gradient(180deg,var(--wood-l),var(--wood-m) 45%,var(--wood-d))}
+.cab .side{flex:0 0 15%;display:grid;grid-template-rows:1fr 1fr}
+.cab .drawer{border:1px solid rgba(40,20,8,.55);display:grid;place-items:center;background:linear-gradient(180deg,rgba(255,255,255,.10),rgba(0,0,0,.10))}
+.cab .drawer svg{width:14px;height:14px}
+.cab .plaque{flex:1 1 70%;margin:6px 0;background:var(--page);position:relative;display:grid;place-items:center;box-shadow:0 0 0 1px rgba(40,20,8,.35)}
+.cab .plaque::before,.cab .plaque::after{content:"";position:absolute;width:14px;height:14px;border:1px solid var(--red)}
+.cab .plaque::before{left:6px;top:6px;border-right:0;border-bottom:0}
+.cab .plaque::after{right:6px;bottom:6px;border-left:0;border-top:0}
+.cab h1{margin:0;font-size:24px;line-height:30px;font-weight:700;color:var(--btn);letter-spacing:.12em;text-indent:.12em}
+.back{position:absolute;left:0;top:0;width:15%;min-width:48px;height:64px;border:0;background:rgba(37,20,10,.55);color:#fff;font-size:14px;line-height:20px;font-weight:700}
+
+/* 三-1 頂部提示 */
+.tips{display:flex;flex-direction:column;gap:8px;padding:12px 16px 0}
+.tip{border-radius:8px;padding:8px 12px;font-size:13px;line-height:20px}
+.tip.post{background:var(--tip)}
+.tip.free{background:var(--ship)}
+.tip b{font-weight:700}
+
+/* 三-2 搜尋與分類（固定在頂部） */
+.tools{position:sticky;top:0;z-index:5;background:var(--page);padding:12px 16px 8px;display:flex;flex-direction:column;gap:8px;border-bottom:1px solid var(--line)}
+.search{position:relative}
+.search input{width:100%;height:44px;border:1px solid var(--line);border-radius:8px;background:var(--card);padding:0 44px 0 40px}
+.search svg{position:absolute;left:12px;top:12px;width:20px;height:20px;stroke:var(--ink2)}
+.search .clear{position:absolute;right:0;top:0;width:44px;height:44px;border:0;background:none;font-size:20px;color:var(--ink2)}
+.search input[type="search"]::-webkit-search-cancel-button,
+.search input[type="search"]::-webkit-search-decoration{-webkit-appearance:none;appearance:none}
+.cats{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;margin:0 -16px;padding-left:16px}
+.cats::after{content:"";flex:none;width:8px}
+.cats::-webkit-scrollbar{display:none}
+.cat{flex:none;min-height:44px;padding:0 14px;border-radius:999px;border:1px solid var(--btn);background:var(--card);color:var(--btn);font-size:14px;line-height:20px;white-space:nowrap}
+.cat[aria-pressed="true"]{background:var(--btn);color:var(--btn-ink);font-weight:700}
+.cat.all{border-style:dashed}
+
+/* 商品 */
+.sec{padding:16px 16px 0}
+.sec h2{margin:0 0 12px;font-size:18px;line-height:26px;font-weight:700}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.pcard{background:var(--card);border-radius:12px;box-shadow:var(--sh-card);overflow:hidden;display:flex;flex-direction:column;min-width:0}
+.pcard.on{box-shadow:0 0 0 2px var(--btn),var(--sh-card)}
+.pcard .ph{aspect-ratio:4/3;width:100%}
+.pcard .body{padding:12px;display:flex;flex-direction:column;gap:8px;flex:1}
+.pcard .nm{font-size:16px;line-height:24px;font-weight:700;overflow-wrap:anywhere}
+.pcard .qty{margin-top:auto}
+.ph{position:relative;background:var(--sel);display:grid;place-items:center;overflow:hidden;border:0;padding:0}
+.ph img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0}
+.ph img.ok{opacity:1}
+.ph .ini{font-weight:700;color:var(--btn);font-size:20px}
+.pcard .ph .ini{font-size:40px}
+.rows{display:flex;flex-direction:column}
+.row{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:12px 0;border-bottom:1px solid var(--line)}
+.row .ph{flex:none;width:48px;height:48px;border-radius:8px}
+.row .txt{flex:1 1 120px;min-width:0}
+.row .nm{font-size:16px;line-height:24px;font-weight:700;overflow-wrap:anywhere}
+.row .ctl{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end;margin-left:auto}
+.tag{display:inline-block;font-size:14px;line-height:20px;color:var(--ink2);border:1px solid var(--line);border-radius:999px;padding:0 8px;margin-right:6px}
+.chip{min-height:44px;min-width:56px;padding:0 12px;border-radius:8px;border:1px solid var(--btn);background:var(--card);color:var(--btn);font-size:14px;line-height:20px;white-space:nowrap}
+.chip[aria-pressed="true"]{background:var(--btn);color:var(--btn-ink);font-weight:700}
+.ctl .chip,.ctl .chip[aria-pressed="true"]{font-weight:600}
+.chip.more{border-style:dashed;color:var(--ink2);border-color:var(--line)}
+.qty{display:flex;align-items:center;gap:8px}
+.step{display:flex;align-items:center;border:1px solid var(--btn);border-radius:8px;background:var(--card);overflow:hidden}
+.step button{width:44px;height:44px;border:0;background:none;color:var(--btn);font-size:20px;line-height:1}
+.step button:disabled{color:var(--off-ink);cursor:default}
+.step .n{min-width:36px;text-align:center;font-weight:700}
+.step input{width:44px;height:44px;border:0;background:none;text-align:center;font-weight:700;padding:0;-moz-appearance:textfield}
+.step input::-webkit-outer-spin-button,.step input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.pick{display:flex;flex-wrap:wrap;gap:6px 8px;align-items:center}
+.pick .chip,.pick .chip[aria-pressed="true"]{display:flex;align-items:center;justify-content:center;gap:3px;min-height:44px;padding:0 6px;font-size:13px;line-height:18px;font-weight:600;letter-spacing:0;white-space:nowrap}
+.pick .chip::before{content:"✓";flex:0 0 12px;width:12px;visibility:hidden}
+.pick .chip[aria-pressed="true"]::before{visibility:visible}
+.pick .hint{flex:1 1 100%}
+.pcard .pick .chip{flex:1 1 100%;min-width:0}
+.pcard .qty{padding-top:2px}
+.pcard .step{flex:1 1 auto;min-width:0}
+.pcard .step button{flex:none}
+.pcard .step input{flex:1 1 0;width:auto;min-width:0}
+.pcard .qty > span{flex:none;white-space:nowrap}
+@media (max-width:389px){.pcard .body{padding-left:8px;padding-right:8px}.pcard .qty{gap:4px}}
+@media (max-width:339px){.pick .chip,.pick .chip[aria-pressed="true"]{white-space:normal;min-height:48px}.pcard .step button{flex:1 1 30px;min-width:30px}.pcard .step input{flex:1 1 30px}}
+.offbox{background:var(--off);color:var(--off-ink);border-radius:8px;padding:8px 12px;font-size:14px;line-height:21px;flex:1 1 100%}
+.empty{padding:32px 16px;text-align:center;color:var(--ink2)}
+.spacer{height:calc(96px + env(safe-area-inset-bottom))}
+
+/* 三-5 底部固定列 */
+.bar{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--card);box-shadow:var(--sh-bar);padding:12px 16px calc(12px + env(safe-area-inset-bottom))}
+.bar .in{max-width:398px;margin:0 auto}
+.main{display:block;width:100%;min-height:48px;border:0;border-radius:8px;background:var(--btn);color:var(--btn-ink);font-size:16px;line-height:24px;font-weight:700;text-align:center;text-decoration:none;padding:12px 16px}
+.main:disabled{background:var(--off);color:var(--off-ink);cursor:not-allowed}
+.sub{display:block;width:100%;min-height:44px;border:1px solid var(--btn);border-radius:8px;background:var(--card);color:var(--btn);font-weight:700;padding:10px 16px}
+
+/* 四、購物車 */
+.box{background:var(--card);border-radius:12px;box-shadow:var(--sh-card);padding:12px}
+.box h2{margin:0 0 8px;font-size:18px;line-height:26px;font-weight:700}
+.line{padding:10px 0;border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:6px}
+.line .nm .tag{margin:0 0 0 6px;font-weight:400}
+.line .l2{display:flex;gap:12px;justify-content:space-between;align-items:center}
+.line .l2 .sq{flex:1 1 0;min-width:0;white-space:normal;text-align:left;font-size:14px;line-height:21px;color:var(--ink2);overflow-wrap:anywhere}
+.line .l2 .ops{flex:none}
+.line .qspec{font-size:13px;line-height:20px;color:var(--ink2);overflow-wrap:anywhere}
+.line .amt,.sumrow span:last-child{flex:none;text-align:right;font-variant-numeric:tabular-nums}
+#v-cart .stack{gap:12px}
+#v-cart .field{margin-top:10px}
+#v-cart .field:first-of-type{margin-top:0}
+#v-cart .radio{margin-top:6px}
+#doneNote:empty{display:none}
+.line:last-child{border-bottom:0}
+.line .top{display:flex;gap:12px;justify-content:space-between;align-items:baseline}
+.line .nm{font-weight:700;overflow-wrap:anywhere}
+.line .sq{white-space:nowrap;text-align:right}
+.line .ops{display:flex;gap:8px;justify-content:flex-end;align-items:center}
+.rm{min-height:44px;padding:0 12px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink2);font-size:14px}
+.field{display:flex;flex-direction:column;gap:4px;margin-top:12px}
+.field:first-of-type{margin-top:0}
+.field label{font-size:14px;line-height:21px;font-weight:700}
+.field input,.field textarea{width:100%;min-height:44px;border:1px solid var(--line);border-radius:8px;background:#fff;padding:10px 12px}
+.field textarea{resize:vertical}
+.field .err{display:none;font-size:14px;line-height:21px;color:var(--red)}
+.field.bad input,.field.bad textarea{border-color:var(--red);background:var(--red-bg)}
+.field.bad .err{display:block}
+.radio{display:flex;align-items:center;gap:12px;min-height:44px;padding:8px 12px;border:1px solid var(--line);border-radius:8px;background:#fff;margin-top:8px;cursor:pointer}
+.radio input{width:20px;height:20px;accent-color:var(--btn);flex:none}
+.radio.on{border-color:var(--btn);background:var(--sel)}
+.shipcard{background:var(--ship);border-radius:8px;padding:12px;font-size:14px;line-height:21px}
+.alert{background:var(--red-bg);border:1px solid var(--red);color:var(--red);border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:8px}
+.hp{position:absolute;left:-9999px;width:1px;height:1px;opacity:0}
+
+/* 五、成功頁 */
+.done{text-align:center}
+.ono{font-size:24px;line-height:32px;font-weight:700;letter-spacing:.04em}
+.out{width:100%;min-height:220px;border:1px solid var(--line);border-radius:8px;background:#fff;padding:12px;font-size:14px;line-height:21px}
+.note{font-size:14px;line-height:21px;color:var(--btn);font-weight:700;min-height:21px}
+
+/* 全部分類、照片放大 */
+.sheet{position:fixed;inset:0;z-index:20;background:rgba(37,41,31,.5);display:flex;align-items:flex-end;justify-content:center}
+.sheet .panel{width:100%;max-width:430px;background:var(--page);border-radius:12px 12px 0 0;padding:16px 16px calc(16px + env(safe-area-inset-bottom));max-height:80vh;overflow:auto}
+.sheet h2{margin:0 0 12px;font-size:18px;line-height:26px}
+.sheet .g{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.sheet .g .cat{width:100%;border-radius:8px;white-space:normal}
+.zoom{position:fixed;inset:0;z-index:30;background:rgba(20,22,16,.88);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:16px}
+.zoom img{max-width:100%;max-height:72vh;border-radius:12px}
+.zoom p{margin:0;color:#fff;font-weight:700}
+.nb{white-space:nowrap}
+.sumrow{display:flex;justify-content:space-between;gap:12px;padding:6px 0}
+.sumrow.total{font-weight:700;border-top:1px solid var(--line);margin-top:6px;padding-top:10px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="cab">
+    <div class="side"><div class="drawer"><svg viewBox="0 0 14 14" aria-hidden="true"><circle cx="7" cy="7" r="4.5" fill="none" stroke="#2b1a0e" stroke-width="1.6"/><circle cx="7" cy="7" r="1.4" fill="#d9b673"/></svg></div><div class="drawer"><svg viewBox="0 0 14 14" aria-hidden="true"><circle cx="7" cy="7" r="4.5" fill="none" stroke="#2b1a0e" stroke-width="1.6"/><circle cx="7" cy="7" r="1.4" fill="#d9b673"/></svg></div></div>
+    <div class="plaque"><h1 id="title">藥局訂購</h1></div>
+    <div class="side"><div class="drawer"><svg viewBox="0 0 14 14" aria-hidden="true"><circle cx="7" cy="7" r="4.5" fill="none" stroke="#2b1a0e" stroke-width="1.6"/><circle cx="7" cy="7" r="1.4" fill="#d9b673"/></svg></div><div class="drawer"><svg viewBox="0 0 14 14" aria-hidden="true"><circle cx="7" cy="7" r="4.5" fill="none" stroke="#2b1a0e" stroke-width="1.6"/><circle cx="7" cy="7" r="1.4" fill="#d9b673"/></svg></div></div>
+    <button class="back" id="backBtn" type="button" hidden>‹ 返回</button>
+  </header>
+
+  <!-- 商品列表 -->
+  <main id="v-list">
+    <div class="tips">
+      <div class="tip post">郵局寄送，週一到週四出貨；週五與國定假日不寄。想趕當週四寄出：請在<b>週四上午11:00前</b>下單，並在<b>11:00前於LINE回覆確認報價</b>。來不及確認的訂單，順延至下一個可出貨日。</div>
+      <div class="tip free">全品項可混搭，滿 $2,500 免運，未滿加收運費 $80，實際金額由我們在 LINE 回覆。</div>
+    </div>
+    <div class="tips" style="padding-top:8px">
+      <div class="tip post" id="lastOrder" hidden><span id="lastOrderText"></span><button class="sub" type="button" id="lastOrderBtn" style="margin-top:8px">查看報價與確認</button></div>
+      <button class="sub" type="button" id="calcBtn">藥帖用量試算（準備中）</button>
+    </div>
+    <div class="tools">
+      <div class="search">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>
+        <input id="q" type="search" placeholder="搜尋品名、別名或代碼" aria-label="搜尋品名、別名或代碼" autocomplete="off">
+        <button class="clear" id="qClear" type="button" aria-label="清除搜尋" hidden>×</button>
+      </div>
+      <div class="cats" id="cats" role="group" aria-label="分類"></div>
+    </div>
+    <div id="list"></div>
+    <div class="spacer"></div>
+    <div class="bar"><div class="in"><button class="main" id="openCart" type="button">查看清單・已選 0 項</button></div></div>
+  </main>
+
+  <!-- 購物車／結帳 -->
+  <main id="v-cart" hidden>
+    <div class="pad stack" style="padding-top:16px;padding-bottom:calc(24px + env(safe-area-inset-bottom))">
+      <div class="box"><h2>訂購清單</h2><div id="lines"></div></div>
+
+      <form id="form" novalidate class="stack">
+        <div class="box">
+          <h2>收件資料</h2>
+          <div class="field" id="f-pharmacy"><label for="i-pharmacy">藥局名稱</label><input id="i-pharmacy" autocomplete="organization" placeholder="請填藥局全名，例：○○藥局" maxlength="60"><span class="err">請填寫藥局名稱</span></div>
+          <div class="field" id="f-contact"><label for="i-contact">聯絡人</label><input id="i-contact" autocomplete="name" maxlength="30"><span class="err">請填寫聯絡人</span></div>
+          <div class="field" id="f-phone"><label for="i-phone">手機</label><input id="i-phone" type="tel" inputmode="tel" autocomplete="tel" maxlength="20"><span class="err">請填寫可聯絡的手機號碼</span></div>
+          <div class="field" id="f-address"><label for="i-address" id="l-address">收件地址</label><input id="i-address" autocomplete="street-address" maxlength="120"><span class="err">郵局寄送需要收件地址</span></div>
+          <input class="hp" id="i-website" tabindex="-1" autocomplete="off" aria-hidden="true">
+        </div>
+
+        <div class="box">
+          <h2>配送方式</h2>
+          <label class="radio on" id="r-post"><input type="radio" name="delivery" id="d-post" value="郵局" checked><span>郵局寄送（週一至週四出貨）</span></label>
+          <label class="radio" id="r-other"><input type="radio" name="delivery" id="d-other" value="其他"><span>其他寄送方式（例：7-11 店到店）</span></label>
+          <div id="otherBox" hidden>
+            <div class="field" id="f-dinfo"><label for="i-dinfo">門市名稱</label><input id="i-dinfo" placeholder="例：7-11 ○○門市" maxlength="120"><span class="err">請填寫門市名稱</span></div>
+            <div class="field" id="f-method"><label for="i-method">寄送方式（不是 7-11 店到店才需要填）</label><input id="i-method" placeholder="7-11 店到店" maxlength="40"></div>
+            <p class="help" style="margin:8px 0 0">店到店不必填收件地址。特殊寄送由嘉榮確認。</p>
+          </div>
+        </div>
+
+        <div class="box">
+          <h2>備註</h2>
+          <div class="field"><label for="i-memo" class="help" style="font-weight:400">沒有可以不填。<strong>需要收據請勾選下方方塊</strong>，沒勾就不開立。</label><textarea id="i-memo" rows="3" maxlength="500" placeholder="例：7-11 店到店（○○門市）、希望週三前到"></textarea></div>
+          <label class="radio" id="r-receipt"><input type="checkbox" id="i-receipt"><span>需要收據</span></label>
+          <div id="receiptBox" style="margin-top:8px" hidden>
+            <div class="field" id="f-rtitle"><label for="i-rtitle">收據抬頭</label><input id="i-rtitle" autocomplete="off" maxlength="60"><span class="err">請填寫收據抬頭</span></div>
+            <div class="field" id="f-rtaxid"><label for="i-rtaxid">統一編號（選填）</label><input id="i-rtaxid" type="text" inputmode="numeric" autocomplete="off" maxlength="8"><span class="err">統一編號需為 8 位數字，沒有可以不填</span></div>
+          </div>
+        </div>
+
+        <div class="shipcard">全品項可混搭，滿 $2,500 免運；運費在報價時確認，實際金額由我們在 LINE 回覆。</div>
+        <p class="help" style="margin:0">付款方式請跟我洽詢。</p>
+        <p class="help" style="margin:0">資料僅用於核對藥局與寄送。</p>
+
+        <div class="alert" id="fail" role="alert" hidden>
+          <span>訂單尚未送出，請再試一次。</span>
+          <button class="sub" type="button" id="toText">改用文字訂單（複製後用 LINE 傳送）</button>
+        </div>
+        <button class="main" id="submitBtn" type="submit">送出訂單</button>
+        <p class="help" id="submitWhy" style="margin:0;text-align:center" hidden>清單還沒有商品，無法送出</p>
+      </form>
+    </div>
+  </main>
+
+  <!-- 成功頁 -->
+  <main id="v-done" hidden>
+    <div class="pad stack done" style="padding-top:24px;padding-bottom:32px">
+      <div class="box stack">
+        <h2 style="margin:0">已收到訂單</h2>
+        <div><div class="help">訂單編號</div><div class="ono" id="ono"></div></div>
+        <button class="sub" type="button" id="copyNo">複製單號</button>
+        <a class="main" id="lineBtn" target="_blank" rel="noopener">傳 LINE 給嘉榮</a>
+        <div class="note" id="doneNote" role="status"></div>
+        <p style="margin:0;text-align:left">請按上面的按鈕，把訂單編號傳給嘉榮。報價好了會用 LINE 通知您，點通知裡的連結就能查看金額並確認訂單。確認後才會安排出貨。</p>
+      </div>
+      <button class="sub" type="button" id="again">返回選購</button>
+    </div>
+  </main>
+
+  <!-- 報價確認頁（網址帶 ?q=專屬碼 時顯示；金額由後端回傳，這個檔案裡沒有任何品項價格） -->
+  <main id="v-quote" hidden>
+    <div class="pad stack" style="padding-top:24px;padding-bottom:32px">
+      <div class="box stack" id="qGate">
+        <h2 style="margin:0">查看訂單報價</h2>
+        <p style="margin:0">請輸入下單時填寫的手機末 3 碼。</p>
+        <div class="field" id="f-last3"><label for="i-last3">手機末 3 碼</label><input id="i-last3" type="tel" inputmode="numeric" maxlength="3" autocomplete="off"><span class="err">請輸入 3 個數字</span></div>
+        <button class="main" id="qOpen" type="button">查看報價</button>
+        <div class="alert" id="qGateFail" role="alert" hidden></div>
+      </div>
+      <div class="stack" id="qBody" hidden>
+        <div class="box">
+          <h2 id="qTitle"></h2>
+          <p class="help" id="qMeta" style="margin:0 0 8px"></p>
+          <div id="qLines"></div>
+          <div id="qSum"></div>
+        </div>
+        <div class="shipcard" id="qShip"></div>
+        <div class="alert" id="qFail" role="alert" hidden></div>
+        <button class="main" id="qConfirm" type="button">確認訂單</button>
+        <p class="help" id="qAfter" style="margin:0"></p>
+      </div>
+      <button class="sub" type="button" id="qBack">前往訂購頁</button>
+    </div>
+  </main>
+
+  <!-- 文字訂單（未設定收單網址或送單失敗時的備援） -->
+  <main id="v-text" hidden>
+    <div class="pad stack" style="padding-top:24px;padding-bottom:32px">
+      <div class="box stack">
+        <h2 style="margin:0">請用 LINE 傳送訂單</h2>
+        <p style="margin:0">這張訂單還沒有送到我們這邊。請複製下面的文字，貼到 LINE 傳給永聖中藥房。</p>
+        <textarea class="out" id="out" readonly aria-label="訂單文字"></textarea>
+        <button class="main" type="button" id="copyText">複製訂單文字</button>
+        <a class="sub" id="lineBtn2" target="_blank" rel="noopener" style="text-align:center;text-decoration:none">開啟 LINE</a>
+        <div class="note" id="textNote" role="status"></div>
+      </div>
+      <button class="sub" type="button" id="textBack">返回訂購清單</button>
+    </div>
+  </main>
+</div>
+
+<div class="sheet" id="catSheet" hidden><div class="panel" role="dialog" aria-label="全部分類"><h2>全部分類</h2><div class="g" id="catGrid"></div></div></div>
+<div class="sheet" id="calcSheet" hidden><div class="panel" role="dialog" aria-label="藥帖用量試算"><h2>藥帖用量試算</h2><p style="margin:0 0 12px">輸入各藥膳的帖數，自動算出每味藥材需要的量與建議訂購規格。這個功能還在準備中，開放後會出現在這裡。</p><button class="sub" type="button" id="calcClose">關閉</button></div></div>
+<div class="zoom" id="zoom" hidden><img id="zoomImg" alt=""><p id="zoomCap"></p><button class="sub" type="button" style="max-width:200px">關閉</button></div>
+
+<script>
+(function(){
+'use strict';
+/* ================= 可設定 ================= */
+/* Apps Script 網頁應用程式網址（結尾為 /exec）。留空時，送出會改為產生可複製的文字訂單。 */
+const APPS_SCRIPT_URL = '';
+/* 「開啟 LINE」按鈕的連結。寫 {text} 的位置會換成預填訊息。
+   官方帳號範例：https://line.me/R/oaMessage/@您的帳號ID/?{text}
+   預設值會開啟 LINE 的分享畫面，由客人自己選擇傳給誰。 */
+const LINE_URL = 'https://line.me/R/share?text={text}';
+const SHOP_NAME = '永聖中藥房';
+const IMG_DIR = 'images/';
+const STORE_KEY = 'pharmacyOrderV3';       /* 購物車與收件資料 */
+const LAST_KEY = 'pharmacyLastOrderV3';    /* 最近一張訂單（用來「記住這台裝置」） */
+const CATALOG_KEY = 'pharmacyCatalogV4';   /* 從試算表「品項」分頁抓回來的品項清單 */
+
+/* ================= 品項（不含任何金額） =================
+   這份清單是「內建備份」。設定了 APPS_SCRIPT_URL 之後，頁面會改用試算表「品項」分頁的內容，
+   所以之後新增或修改品項，只要改試算表（並放照片 images/代碼.jpg），不必改這個檔案。
+   欄位：cat 分類、code 代碼、name 品名、specs 可選規格、unit 單位、note 說明、alias 隱藏的搜尋別名、off 暫不開放、
+         ask 洽詢品項（沒有固定規格也可以加入清單）、pending 待報價（只是標記，不是金額） */
+let ITEMS = [
+ {"cat":"御膳方藥膳包","code":"G01","name":"絳雪四物方","specs":["1 包"],"unit":"包","note":"四物・125 g"},
+ {"cat":"御膳方藥膳包","code":"G02","name":"八珍太極引","specs":["1 包"],"unit":"包","note":"八珍・145 g"},
+ {"cat":"御膳方藥膳包","code":"G03","name":"十全天光燉","specs":["1 包"],"unit":"包","note":"十全・155 g"},
+ {"cat":"御膳方藥膳包","code":"G04","name":"雙冬玉露方","specs":["1 包"],"unit":"包","note":"雙冬・100 g"},
+ {"cat":"御膳方藥膳包","code":"G05","name":"草尾清露集","specs":["1 包"],"unit":"包","note":"狗尾草・125 g"},
+ {"cat":"御膳方藥膳包","code":"G06","name":"仙草伏暑方","specs":["1 包"],"unit":"包","note":"仙草雞（夏日限定）・95 g"},
+ {"cat":"御膳方藥膳包","code":"G07","name":"四神青田釀","specs":["1 包"],"unit":"包","note":"四神・155 g"},
+ {"cat":"御膳方藥膳包","code":"G08","name":"墨玉玄泉方","specs":["1 包"],"unit":"包","note":"黑豆首烏・135 g"},
+ {"cat":"御膳方藥膳包","code":"G09","name":"金縷雲華方","specs":["1 包"],"unit":"包","note":"黃金蟲草・100 g"},
+ {"cat":"御膳方藥膳包","code":"G10","name":"參耆潤玉方","specs":["1 包"],"unit":"包","note":"人參雞・100 g"},
+ {"cat":"御膳方藥膳包","code":"G11","name":"三元及第湯","specs":["1 包"],"unit":"包","note":"三元・125 g"},
+ {"cat":"御膳方藥膳包","code":"G12","name":"髓河骨峰譜","specs":["1 包"],"unit":"包","note":"藥燉排骨・135 g"},
+ {"cat":"御膳方藥膳包","code":"G13","name":"星洲骨茶譜","specs":["1 包"],"unit":"包","note":"肉骨茶・85 g"},
+ {"cat":"御膳方藥膳包","code":"G14","name":"燭夜溫羊方","specs":["1 包"],"unit":"包","note":"羊肉爐・125 g"},
+ {"cat":"御膳方藥膳包","code":"G15","name":"釀泉祛寒方","specs":["1 包"],"unit":"包","note":"燒酒雞・125 g"},
+ {"cat":"御膳方藥膳包","code":"G16","name":"椒薑太乙方","specs":["1 包"],"unit":"包","note":"薑母鴨・125 g"},
+ {"cat":"御膳方藥膳包","code":"G17","name":"萬象滷韻集","specs":["1 包"],"unit":"包","note":"滷包・60 g"},
+ {"cat":"御膳方藥膳包","code":"G18","name":"牛肉滷包","specs":["1 包"],"unit":"包","note":"牛滷・規格依包裝"},
+ {"cat":"御膳方藥膳包","code":"G19","name":"麻辣鍋湯底滷包","specs":["1 包"],"unit":"包","note":"麻辣鍋・規格依包裝"},
+ {"cat":"御膳方藥膳包","code":"G20","name":"當歸黃耆燉魚湯","specs":["1 包"],"unit":"包","note":"","alias":"燉魚 魚湯"},
+ {"cat":"御膳方藥膳包","code":"G21","name":"當歸鴨","specs":["1 包"],"unit":"包","note":"","alias":"當歸鴨"},
+ {"cat":"御膳方藥膳包","code":"G22","name":"韓式人參雞湯","specs":["1 包（小顆鮮人參）","1 包（大顆鮮人參）"],"unit":"包","note":"附鮮人參 1 株：小顆約 100–120 g、大顆約 160–170 g・一包 4–5 人份","alias":"人參雞 參雞湯 鮮人參"},
+ {"cat":"拾貳盞茶飲","code":"T01","name":"拾貳盞｜躺","specs":["1 盒"],"unit":"盒","note":"春之一・薰衣草 × 小麥 × 台灣杭菊・每盒 10 入"},
+ {"cat":"拾貳盞茶飲","code":"T02","name":"拾貳盞｜美","specs":["1 盒"],"unit":"盒","note":"春之二・玫瑰花 × 薄荷 × 台灣杭菊・每盒 10 入"},
+ {"cat":"拾貳盞茶飲","code":"T03","name":"拾貳盞｜煩","specs":["1 盒"],"unit":"盒","note":"春之三・薄荷 × 羅漢果 × 台灣杭菊・每盒 10 入"},
+ {"cat":"拾貳盞茶飲","code":"T04","name":"拾貳盞｜仙","specs":["1 盒"],"unit":"盒","note":"夏之一・洛神花 × 山楂 × 烏梅・每盒 10 入"},
+ {"cat":"拾貳盞茶飲","code":"T05","name":"拾貳盞｜濕","specs":["1 盒"],"unit":"盒","note":"夏之二・荷葉 × 山楂 × 烏梅・含番瀉葉，請依外盒警語；有特殊生理狀況或正在服藥，請先諮詢藥師・每盒 10 入"},
+ {"cat":"拾貳盞茶飲","code":"T06","name":"拾貳盞｜溼","specs":["1 盒"],"unit":"盒","note":"夏之三・白朮 × 茯苓 × 白首烏・每盒 10 入"},
+ {"cat":"拾貳盞茶飲","code":"T07","name":"拾貳盞｜食","specs":["1 盒"],"unit":"盒","note":"秋之一・麥芽 × 陳皮 × 紅棗・每盒 10 入"},
+ {"cat":"拾貳盞茶飲","code":"T08","name":"拾貳盞｜癒","specs":["1 盒"],"unit":"盒","note":"秋之二・黃耆 × 白朮 × 薄荷・每盒 10 入"},
+ {"cat":"拾貳盞茶飲","code":"T09","name":"拾貳盞｜淼","specs":["1 盒"],"unit":"盒","note":"秋之三・麥門冬 × 百合 × 玉竹・每盒 10 入"},
+ {"cat":"拾貳盞茶飲","code":"T10","name":"拾貳盞｜牛","specs":["1 盒"],"unit":"盒","note":"冬之一・牛蒡 × 紅景天 × 黃耆・每盒 10 入"},
+ {"cat":"拾貳盞茶飲","code":"T11","name":"拾貳盞｜驚","specs":["1 盒"],"unit":"盒","note":"冬之二・黃精 × 刺五加 × 肉桂・每盒 10 入"},
+ {"cat":"拾貳盞茶飲","code":"T12","name":"拾貳盞｜黑","specs":["1 盒"],"unit":"盒","note":"冬之三・黑豆 × 杜仲葉 × 白首烏・每盒 10 入"},
+ {"cat":"水藥即飲包","code":"D01","name":"男轉骨","specs":["1 包"],"unit":"包","note":"180–200 cc／包・請先諮詢藥師・需持續服用 3–4 個月"},
+ {"cat":"水藥即飲包","code":"D02","name":"女轉骨","specs":["1 包"],"unit":"包","note":"180–200 cc／包・請先諮詢藥師・需持續服用 3–4 個月"},
+ {"cat":"水藥即飲包","code":"D03","name":"地蜈蚣退火飲","specs":["1 包"],"unit":"包","note":"180–200 cc／包・請先諮詢藥師"},
+ {"cat":"水藥即飲包","code":"D04","name":"加味四物美顏飲","specs":["1 包"],"unit":"包","note":"180–200 cc／包"},
+ {"cat":"水藥即飲包","code":"D05","name":"黑美人四物美顏飲","specs":["1 包"],"unit":"包","note":"180–200 cc／包"},
+ {"cat":"水藥即飲包","code":"D06","name":"八珍美顏飲","specs":["1 包"],"unit":"包","note":"180–200 cc／包"},
+ {"cat":"水藥即飲包","code":"D07","name":"青草茶","specs":["1 包"],"unit":"包","note":"180–200 cc／包"},
+ {"cat":"水藥即飲包","code":"D08","name":"桂花洛神花茶","specs":["1 包"],"unit":"包","note":"180–200 cc／包"},
+ {"cat":"單包裝藥材","code":"S01","name":"珍珠粉","specs":["1 罐"],"unit":"罐","note":"每罐 90 g・超微米食品級"},
+ {"cat":"單包裝藥材","code":"S02","name":"當歸","specs":["1 包"],"unit":"包","note":"45 g"},
+ {"cat":"單包裝藥材","code":"S03","name":"晉耆","specs":["1 包"],"unit":"包","note":"65 g"},
+ {"cat":"單包裝藥材","code":"S04","name":"枸杞","specs":["1 包"],"unit":"包","note":"120 g"},
+ {"cat":"單包裝藥材","code":"S05","name":"紅棗","specs":["1 包"],"unit":"包","note":"300 g"},
+ {"cat":"單包裝藥材","code":"S06","name":"人參鬚","specs":["1 包"],"unit":"包","note":"50 g"},
+ {"cat":"單包裝藥材","code":"S07","name":"西洋參片","specs":["1 包"],"unit":"包","note":"40 g"},
+ {"cat":"單包裝藥材","code":"S08","name":"人參片","specs":["1 包"],"unit":"包","note":"50 g"},
+ {"cat":"單包裝藥材","code":"S09","name":"羅漢果","specs":["1 顆"],"unit":"顆","note":"以顆計"},
+ {"cat":"單包裝藥材","code":"S10","name":"黑胡椒（粒）","specs":["1 包"],"unit":"包","note":"50 g"},
+ {"cat":"單包裝藥材","code":"S11","name":"黑胡椒（粗粒）","specs":["1 包"],"unit":"包","note":"50 g"},
+ {"cat":"單包裝藥材","code":"S12","name":"黑胡椒（粉）","specs":["1 包"],"unit":"包","note":"50 g"},
+ {"cat":"單包裝藥材","code":"S13","name":"白胡椒（粒）","specs":["1 包"],"unit":"包","note":"50 g"},
+ {"cat":"單包裝藥材","code":"S14","name":"白胡椒（粉）","specs":["1 包"],"unit":"包","note":"50 g"},
+ {"cat":"單包裝藥材","code":"S15","name":"秘製胡椒鹽","specs":["1 包"],"unit":"包","note":"100 g・炸物的好朋友"},
+ {"cat":"單包裝藥材","code":"S16","name":"五香粉","specs":["1 包"],"unit":"包","note":"50 g・醃肉、調味"},
+ {"cat":"單包裝藥材","code":"S17","name":"十三香粉","specs":["1 包"],"unit":"包","note":"50 g・醃肉、調味（味道較重）","alias":"百草粉"},
+ {"cat":"單包裝藥材","code":"S18","name":"罐裝西洋參","specs":["1 罐"],"unit":"罐","note":"每罐 150 g","alias":"西洋參 花旗參 粉光參 罐裝"},
+ {"cat":"零嘴","code":"N01","name":"八仙果","specs":[],"unit":"待確認","note":"110 g・彰化員林百果山，手工切製","off":true},
+ {"cat":"零嘴","code":"N02","name":"甘甜梅","specs":[],"unit":"待確認","note":"100 g・生津止渴，彰化員林百果山特產","off":true},
+ {"cat":"零嘴","code":"N03","name":"青木瓜絲","specs":[],"unit":"待確認","note":"100 g・帶嚼勁・彰化員林百果山特產","off":true},
+ {"cat":"零嘴","code":"N04","name":"化核李","specs":[],"unit":"待確認","note":"120 g・酸酸甜甜・彰化員林百果山特產","off":true},
+ {"cat":"零嘴","code":"N05","name":"甘草橄欖","specs":[],"unit":"待確認","note":"150 g・彰化員林百果山特產","off":true},
+ {"cat":"零嘴","code":"N06","name":"化核橄欖","specs":[],"unit":"待確認","note":"120 g・彰化員林百果山特產","off":true},
+ {"cat":"零嘴","code":"N07","name":"仙楂餅","specs":["一斤"],"unit":"斤","note":"以斤計・幫助消化"},
+ {"cat":"零嘴","code":"N08","name":"仙楂丸","specs":["一斤"],"unit":"斤","note":"以斤計・幫助消化"},
+ {"cat":"足浴・外用","code":"X01","name":"木｜青木·春和","specs":["1 袋"],"unit":"袋","note":"五行草本泡足・每袋 6 小包、每小包 20 g・清新草本 × 溫潤木質香・僅供外用；足部有傷口、皮膚炎或感染時請勿使用；特殊族群使用前請先諮詢藥師或醫療專業人員","alias":"疲疲除 足浴包 泡腳 泡足 五行草本泡足"},
+ {"cat":"足浴・外用","code":"X02","name":"水｜玄水·冬靜","specs":["1 袋"],"unit":"袋","note":"五行草本泡足・每袋 6 小包、每小包 20 g・淡雅花香 × 柔和草本・僅供外用；足部有傷口、皮膚炎或感染時請勿使用；特殊族群使用前請先諮詢藥師或醫療專業人員","alias":"好好眠 足浴包 泡腳 泡足 五行草本泡足"},
+ {"cat":"足浴・外用","code":"X03","name":"火｜丹火·夏煦","specs":["1 袋"],"unit":"袋","note":"五行草本泡足・每袋 6 小包、每小包 20 g・濃郁草本 × 溫暖辛香・僅供外用；足部有傷口、皮膚炎或感染時請勿使用；特殊族群使用前請先諮詢藥師或醫療專業人員","alias":"暖暖宮 足浴包 泡腳 泡足 五行草本泡足"},
+ {"cat":"足浴・外用","code":"X04","name":"金｜白金·秋清","specs":["1 袋"],"unit":"袋","note":"五行草本泡足・每袋 6 小包、每小包 20 g・清爽氣息 × 純淨草本・僅供外用；足部有傷口、皮膚炎或感染時請勿使用；特殊族群使用前請先諮詢藥師或醫療專業人員","alias":"臭腳燒 足浴包 泡腳 泡足 五行草本泡足"},
+ {"cat":"足浴・外用","code":"X05","name":"土｜黃土·長夏","specs":["1 袋"],"unit":"袋","note":"五行草本泡足・每袋 6 小包、每小包 20 g・柑橘辛香 × 沉穩草本・僅供外用；足部有傷口、皮膚炎或感染時請勿使用；特殊族群使用前請先諮詢藥師或醫療專業人員","alias":"水水消 足浴包 泡腳 泡足 五行草本泡足"},
+ {"cat":"足浴・外用","code":"X06","name":"蚊香包","specs":["1 包"],"unit":"包","note":"35 g・香茅、薄荷、丁香等"},
+ {"cat":"足浴・外用","code":"X07","name":"白澤淨身包","specs":["1 包"],"unit":"包","note":"艾草、香茅、芙蓉葉、菖蒲、柳枝癀、月桃根、檀香"},
+ {"cat":"足浴・外用","code":"X08","name":"蚊香料（外用）","specs":["一斤"],"unit":"斤","note":"外用，不可內服・成分：紫蘇、薄荷、薄荷全葉、藿香、香茅、金銀花、艾葉、玫瑰花、薰衣草、迷迭香、橙皮、肉桂、石菖蒲、白芷","alias":"蚊香 驅蚊 防蚊 香包"},
+ {"cat":"四物類","code":"H01","name":"精選級當歸片","specs":["半斤","一斤"],"unit":"斤","note":"2 指歸"},
+ {"cat":"四物類","code":"H02","name":"當歸尾","specs":["半斤","一斤"],"unit":"斤","note":""},
+ {"cat":"四物類","code":"H03","name":"特級炒白芍","specs":["半斤","一斤"],"unit":"斤","note":""},
+ {"cat":"四物類","code":"H04","name":"台切生地片","specs":["半斤","一斤"],"unit":"斤","note":""},
+ {"cat":"四物類","code":"H05","name":"台切熟地片","specs":["半斤","一斤"],"unit":"斤","note":""},
+ {"cat":"四物類","code":"H06","name":"酒製川芎片","specs":["半斤","一斤"],"unit":"斤","note":""},
+ {"cat":"四物類","code":"H07","name":"原味川芎片","specs":["半斤","一斤"],"unit":"斤","note":""},
+ {"cat":"參類","code":"H08","name":"剪天水黨蔘","specs":["半斤","一斤"],"unit":"斤","note":""},
+ {"cat":"參類","code":"H09","name":"正官庄野山參片（良）","specs":["1 錢","2 錢","3 錢","4 錢","5 錢"],"unit":"錢","note":"規格 20 良，以錢計（1 錢 = 3.75 g）"},
+ {"cat":"參類","code":"H10","name":"4A大陸紅參","specs":["四兩","半斤","一斤"],"unit":"斤","note":"石柱參 26–28 片／兩"},
+ {"cat":"參類","code":"H11","name":"5A大陸紅參","specs":["四兩","半斤","一斤"],"unit":"斤","note":"石柱參 18–20 片／兩"},
+ {"cat":"參類","code":"H12","name":"5A大陸東洋參","specs":["四兩","半斤","一斤"],"unit":"斤","note":""},
+ {"cat":"參類","code":"H13","name":"手切西洋參","specs":["四兩","半斤","一斤"],"unit":"斤","note":""},
+ {"cat":"參類","code":"H34","name":"吉林蔘鬚","specs":["四兩","半斤","一斤"],"unit":"斤","note":""},
+ {"cat":"補氣類","code":"H14","name":"麩炒白朮","specs":["四兩","半斤","一斤"],"unit":"斤","note":""},
+ {"cat":"補氣類","code":"H15","name":"紅土炒白朮","specs":["四兩","半斤","一斤"],"unit":"斤","note":""},
+ {"cat":"補氣類","code":"H16","name":"捲茯苓","specs":["四兩","半斤","一斤"],"unit":"斤","note":""},
+ {"cat":"補氣類","code":"H17","name":"生甘草","specs":["四兩","半斤","一斤"],"unit":"斤","note":""},
+ {"cat":"補氣類","code":"H19","name":"炙甘草","specs":["四兩","半斤","一斤"],"unit":"斤","note":""},
+ {"cat":"補氣類","code":"H22","name":"4A晉耆","specs":["半斤","一斤"],"unit":"斤","note":""},
+ {"cat":"補氣類","code":"H23","name":"2A晉耆","specs":["半斤","一斤"],"unit":"斤","note":""},
+ {"cat":"棗・枸杞","code":"H24","name":"枸杞","specs":["一斤"],"unit":"斤","note":"150 顆／兩・茶包用的 220 顆／兩規格請在備註註明"},
+ {"cat":"棗・枸杞","code":"H25","name":"枸杞王","specs":["一斤"],"unit":"斤","note":"30 顆／兩"},
+ {"cat":"棗・枸杞","code":"H26","name":"圓黑棗","specs":["一斤"],"unit":"斤","note":"口感較甜"},
+ {"cat":"棗・枸杞","code":"H27","name":"長黑棗","specs":["一斤"],"unit":"斤","note":"口感帶微酸"},
+ {"cat":"棗・枸杞","code":"H28","name":"大紅棗","specs":["一斤"],"unit":"斤","note":"8–10 顆／兩"},
+ {"cat":"棗・枸杞","code":"H29","name":"中紅棗","specs":["一斤"],"unit":"斤","note":"14–16 顆／兩"},
+ {"cat":"滋補藥材","code":"H30","name":"玉竹","specs":["半斤","一斤"],"unit":"斤","note":""},
+ {"cat":"滋補藥材","code":"H31","name":"炒青仁黑豆","specs":["半斤","一斤"],"unit":"斤","note":""},
+ {"cat":"滋補藥材","code":"H32","name":"製何首烏","specs":["四兩","半斤","一斤"],"unit":"斤","note":""},
+ {"cat":"滋補藥材","code":"H50","name":"黃精","specs":["四兩","半斤","一斤"],"unit":"斤","note":""},
+ {"cat":"滋補藥材","code":"H51","name":"狗尾草","specs":["半斤","一斤"],"unit":"斤","note":""},
+ {"cat":"滋補藥材","code":"H52","name":"天麻","specs":["四兩","半斤","一斤"],"unit":"斤","note":""},
+ {"cat":"滋補藥材","code":"H53","name":"黃金蟲草","specs":["四兩","半斤","一斤"],"unit":"斤","note":""},
+ {"cat":"滋補藥材","code":"H54","name":"麥冬","specs":["四兩","半斤","一斤"],"unit":"斤","note":""},
+ {"cat":"滋補藥材","code":"H55","name":"天冬","specs":["四兩","半斤","一斤"],"unit":"斤","note":""},
+ {"cat":"滋補藥材","code":"H56","name":"百合","specs":["四兩","半斤","一斤"],"unit":"斤","note":""},
+ {"cat":"滋補藥材","code":"H57","name":"沙參","specs":["四兩","半斤","一斤"],"unit":"斤","note":""},
+ {"cat":"滋補藥材","code":"H58","name":"雞血藤","specs":["四兩","半斤","一斤"],"unit":"斤","note":""},
+ {"cat":"滋補藥材","code":"H59","name":"牛乳埔","specs":["四兩","半斤","一斤"],"unit":"斤","note":""},
+ {"cat":"四神食材","code":"H36","name":"建蓮子","specs":["半斤","一斤"],"unit":"斤","note":""},
+ {"cat":"四神食材","code":"H37","name":"紡蓮子","specs":["半斤","一斤"],"unit":"斤","note":""},
+ {"cat":"四神食材","code":"H38","name":"芡實","specs":["半斤","一斤"],"unit":"斤","note":""},
+ {"cat":"四神食材","code":"H39","name":"蘇淮山","specs":["半斤","一斤"],"unit":"斤","note":""},
+ {"cat":"四神食材","code":"H40","name":"薏仁","specs":["半斤","一斤"],"unit":"斤","note":""},
+ {"cat":"四神食材","code":"H41","name":"脫水淮山","specs":["半斤","一斤"],"unit":"斤","note":""},
+ {"cat":"四神食材","code":"H42","name":"大麥(洋薏仁)","specs":["一斤"],"unit":"斤","note":""},
+ {"cat":"辛香料","code":"H18","name":"肉桂片","specs":["四兩","半斤"],"unit":"斤","note":""},
+ {"cat":"辛香料","code":"H20","name":"桂枝","specs":["一斤"],"unit":"斤","note":""},
+ {"cat":"辛香料","code":"H21","name":"桂蒂","specs":["一斤"],"unit":"斤","note":""},
+ {"cat":"辛香料","code":"H33","name":"花椒","specs":["四兩","半斤","一斤"],"unit":"斤","note":""},
+ {"cat":"辛香料","code":"H35","name":"大紅袍花椒","specs":["四兩","半斤","一斤"],"unit":"斤","note":""},
+ {"cat":"辛香料","code":"H43","name":"白胡椒粒","specs":["四兩","半斤","一斤"],"unit":"斤","note":""},
+ {"cat":"辛香料","code":"H44","name":"八角茴香","specs":["半斤","一斤"],"unit":"斤","note":""},
+ {"cat":"辛香料","code":"H45","name":"小茴香","specs":["四兩","半斤","一斤"],"unit":"斤","note":""},
+ {"cat":"辛香料","code":"H46","name":"三柰","specs":["四兩","半斤","一斤"],"unit":"斤","note":""},
+ {"cat":"辛香料","code":"H47","name":"白芷","specs":["四兩","半斤","一斤"],"unit":"斤","note":""},
+ {"cat":"辛香料","code":"H48","name":"四製陳皮","specs":["四兩","半斤","一斤"],"unit":"斤","note":""},
+ {"cat":"辛香料","code":"H49","name":"丁香","specs":["二兩","四兩","半斤","一斤"],"unit":"斤","note":""},
+ {"cat":"辛香料","code":"H60","name":"肉桂碎","specs":["四兩","半斤","一斤"],"unit":"斤","note":""},
+ {"cat":"辛香料","code":"H61","name":"乾薑","specs":["四兩","半斤","一斤"],"unit":"斤","note":""},
+ {"cat":"辛香料","code":"H62","name":"肉豆蔻","specs":["四兩","半斤","一斤"],"unit":"斤","note":""},
+ {"cat":"辛香料","code":"H63","name":"白荳蔻","specs":["四兩","半斤","一斤"],"unit":"斤","note":""},
+ {"cat":"辛香料","code":"H64","name":"紫蘇","specs":["一斤"],"unit":"斤","note":""},
+ {"cat":"辛香料","code":"H65","name":"薄荷","specs":["一斤"],"unit":"斤","note":""},
+ {"cat":"辛香料","code":"H66","name":"藿香","specs":["一斤"],"unit":"斤","note":""},
+ {"cat":"辛香料","code":"H67","name":"香茅","specs":["一斤"],"unit":"斤","note":""},
+ {"cat":"辛香料","code":"H68","name":"金銀花","specs":["一斤"],"unit":"斤","note":""},
+ {"cat":"辛香料","code":"H69","name":"艾葉","specs":["一斤"],"unit":"斤","note":""},
+ {"cat":"辛香料","code":"H70","name":"薰衣草","specs":["一斤"],"unit":"斤","note":""},
+ {"cat":"辛香料","code":"H71","name":"玫瑰花","specs":["一斤"],"unit":"斤","note":""},
+ {"cat":"辛香料","code":"H72","name":"迷迭香","specs":["一斤"],"unit":"斤","note":""},
+ {"cat":"辛香料","code":"H73","name":"肉桂棒","specs":["一斤"],"unit":"斤","note":""},
+ {"cat":"果茶類","code":"H74","name":"洛神花","specs":["一斤"],"unit":"斤","note":""},
+ {"cat":"果茶類","code":"H75","name":"山楂","specs":["一斤"],"unit":"斤","note":""},
+ {"cat":"果茶類","code":"H76","name":"無花果片","specs":["一斤"],"unit":"斤","note":"也可用作熱紅酒包原料"},
+ {"cat":"辛香料","code":"H77","name":"月桂葉","specs":["半斤","一斤"],"unit":"斤","note":""},
+ {"cat":"果茶類","code":"H78","name":"蘋果片","specs":["四兩","一斤"],"unit":"斤","note":""},
+ {"cat":"果茶類","code":"H79","name":"柳橙片","specs":["四兩","一斤"],"unit":"斤","note":""},
+ {"cat":"果茶類","code":"H80","name":"黃金龍眼乾","specs":["1 盒"],"unit":"盒","note":"約 280 g"},
+ {"cat":"辛香料","code":"H81","name":"薄荷全葉","specs":["一斤"],"unit":"斤","note":"全葉，與「薄荷」是不同品項"},
+ {"cat":"辛香料","code":"H82","name":"石菖蒲","specs":["一斤"],"unit":"斤","note":"","alias":"菖蒲"},
+ {"cat":"半成品","code":"P01","name":"洛神花茶（半成品）","specs":["一斤"],"unit":"斤","note":"混和好打成碎片劑"},
+ {"cat":"半成品","code":"P02","name":"小心肝茶（半成品）","specs":["一斤"],"unit":"斤","note":"混和好打成碎片劑"},
+ {"cat":"半成品","code":"P03","name":"黑豆茶（半成品）","specs":["一斤"],"unit":"斤","note":"混和好打成碎片劑"},
+ {"cat":"半成品","code":"P04","name":"菊花晴明茶（半成品）","specs":["一斤"],"unit":"斤","note":"混和好打成碎片劑"},
+ {"cat":"包材","code":"B01","name":"小布袋","specs":["1 單位"],"unit":"單位","note":"1 單位＝100 個・不零散賣，只以束（1 單位）販售"},
+ {"cat":"包材","code":"B02","name":"中布袋","specs":["1 單位"],"unit":"單位","note":"1 單位＝100 個・不零散賣，只以束（1 單位）販售"},
+ {"cat":"包材","code":"B03","name":"特大布袋","specs":["1 單位"],"unit":"單位","note":"1 單位＝100 個・不零散賣，只以束（1 單位）販售"},
+ {"cat":"包材","code":"B04","name":"加大布袋","specs":["1 單位"],"unit":"單位","note":"1 單位＝100 個・不零散賣，只以束（1 單位）販售"},
+ {"cat":"包材","code":"B05","name":"大布袋","specs":["1 單位"],"unit":"單位","note":"13.5 × 10.5 cm・1 單位＝100 個・不零散賣，只以束（1 單位）販售"},
+ {"cat":"包材","code":"B06","name":"特加大布袋","specs":["1 單位"],"unit":"單位","note":"21.5 × 16.5 cm・1 單位＝100 個・不零散賣，只以束（1 單位）販售"},
+ {"cat":"包材","code":"B07","name":"6兩黃牛皮立袋","specs":["1 單位"],"unit":"單位","note":"15 × 23 cm・1 單位＝10 個"},
+ {"cat":"包材","code":"B08","name":"6兩白牛皮立袋","specs":["1 單位"],"unit":"單位","note":"15 × 23 cm・1 單位＝10 個"},
+ {"cat":"包材","code":"B09","name":"4兩黃牛皮立袋","specs":["1 單位"],"unit":"單位","note":"12 × 21 cm・1 單位＝10 個"},
+ {"cat":"包材","code":"B10","name":"4兩白牛皮立袋","specs":["1 單位"],"unit":"單位","note":"12 × 21 cm・1 單位＝10 個"},
+ {"cat":"客製化","code":"J01","name":"客製化藥酒","specs":[],"unit":"","note":"洽詢嘉榮藥師","alias":"藥酒","ask":true},
+ {"cat":"客製化","code":"J02","name":"客製化補藥酒","specs":[],"unit":"","note":"洽詢嘉榮藥師","alias":"藥酒 補酒","ask":true},
+ {"cat":"客製化","code":"J03","name":"客製化熱紅酒包","specs":[],"unit":"","note":"洽詢嘉榮藥師","alias":"熱紅酒","ask":true}
+];
+
+/* 搜尋別名：品名含左邊的字，就也能用右邊的字搜到 */
+const ALIASES = [['晉耆','黃耆 北耆 黃芪'],['淮山','山藥 懷山'],['蔘鬚','人參鬚 參鬚 人蔘鬚'],['人參鬚','蔘鬚 參鬚'],['黨蔘','黨參'],['西洋參','花旗參 粉光參'],['東洋參','人參 高麗參'],['紅參','人參 紅蔘'],['野山參','人參 山參'],['枸杞','枸杞子 杞子'],['薏仁','薏苡仁 薏米'],['生地','生地黃 地黃'],['熟地','熟地黃 地黃'],['何首烏','首烏'],['麥冬','麥門冬'],['天冬','天門冬'],['三柰','山奈 沙薑 山柰'],['八角','大茴香 八角茴香'],['牛乳埔','牛奶埔 牛乳房'],['狗尾草','通天草'],['黃金蟲草','蟲草花 蟲草'],['沙參','北沙參'],['紅棗','大棗'],['黑棗','烏棗'],['白芍','芍藥'],['白朮','白术'],['芡實','芡米'],['蓮子','蓮實'],['陳皮','橘皮'],['肉桂','桂皮'],['丁香','公丁香'],['花椒','川椒'],['玉竹','葳蕤'],['仙楂','山楂'],['布袋','滷包袋 棉布袋 煎藥袋'],['立袋','夾鏈袋 牛皮紙袋 包裝袋']];
+const CARD_CATS = ['御膳方藥膳包','拾貳盞茶飲'];
+const LIANG = {'二兩':2,'四兩':4,'半斤':8,'一斤':16};
+const MAX_JIN = 10, MAX_QTY = 999;
+const ASK_SPEC = '洽詢', PENDING = '待報價', TBC = '待確認';
+
+const CATS = []; const BY = {};
+function validCatalog(list){
+  return Array.isArray(list) && list.length > 0 && list.every(function(x){
+    return x && /^[A-Z]\d{2,3}$/.test(x.code) && typeof x.name === 'string' && x.name && typeof x.cat === 'string' && Array.isArray(x.specs);
+  });
+}
+function setItems(list){
+  ITEMS = list.map(function(x){ return {cat:String(x.cat), code:String(x.code), name:String(x.name), specs:x.specs.map(String), unit:String(x.unit || ''), note:String(x.note || ''), alias:String(x.alias || ''), off:!!x.off, ask:!!x.ask, pending:!!x.pending}; });
+  CATS.length = 0; Object.keys(BY).forEach(function(k){ delete BY[k]; });
+  ITEMS.forEach(function(it){
+    if(CATS.indexOf(it.cat) < 0) CATS.push(it.cat);
+    BY[it.code] = it;
+    it.weight = it.specs.length > 0 && it.specs.every(function(s){ return LIANG[s] || /錢$/.test(s); });
+    it.multi = it.specs.indexOf('一斤') >= 0;               /* 有「一斤」的品項可訂 2 斤、3 斤… */
+    it.askOnly = it.ask && !it.specs.length;                /* 洽詢品項沒有固定規格：規格寫「洽詢」，細節請客人寫備註 */
+    it.off = !it.ask && (it.off || it.unit === '待確認' || !it.specs.length);   /* 規格尚未確認，暫不開放 */
+    it.pending = it.pending || it.ask;                      /* 待報價：沒有售價的品項與洽詢品項，一樣可以加入清單 */
+    it.choice = !it.weight && it.specs.length > 1;          /* 不是秤重、但有兩種以上規格（例：G22）：先選規格再選數量 */
+    let extra = '';
+    ALIASES.forEach(function(a){ if(it.name.indexOf(a[0]) >= 0) extra += ' ' + a[1]; });
+    it.hay = (it.name + ' ' + it.code + ' ' + it.note + ' ' + it.cat + ' ' + it.alias + extra).toLowerCase();   /* alias 只拿來搜尋，不顯示 */
+  });
+}
+function specOK(it, s){ return it.askOnly ? s === ASK_SPEC : it.specs.indexOf(s) >= 0; }
+function pruneCart(){                                        /* 品項清單更新後，把已不存在的品項或規格從清單拿掉 */
+  Object.keys(cart).forEach(function(code){ const it = BY[code]; if(!it || it.off || !specOK(it, cart[code].s)) delete cart[code]; });
+}
+(function(){
+  let cached = null;
+  try{ cached = JSON.parse(localStorage.getItem(CATALOG_KEY) || 'null'); }catch(e){}
+  setItems(APPS_SCRIPT_URL && validCatalog(cached) ? cached : ITEMS);
+})();
+async function refreshCatalog(){                             /* 背景向試算表要最新品項；失敗就繼續用現有的 */
+  if(!APPS_SCRIPT_URL) return;
+  try{
+    const res = await fetch(APPS_SCRIPT_URL + (APPS_SCRIPT_URL.indexOf('?') < 0 ? '?' : '&') + 'action=items', {redirect:'follow'});
+    const data = await res.json();
+    if(!data || !data.ok || !validCatalog(data.items)) return;
+    const fresh = JSON.stringify(data.items);
+    let old = ''; try{ old = localStorage.getItem(CATALOG_KEY) || ''; }catch(e){}
+    if(fresh === old) return;
+    try{ localStorage.setItem(CATALOG_KEY, fresh); }catch(e){}
+    setItems(data.items); pruneCart(); save(); renderCats();
+    if(!$('v-list').hidden){ renderList(); renderBar(); }
+  }catch(e){}
+}
+
+/* ================= 狀態 ================= */
+var cart = {};             /* { 代碼: { s: 規格, n: 數量 } } */
+let curCat = '全部', kw = '', moreOpen = {}, clientId = '', sending = false, redrawing = false;
+const $ = function(id){ return document.getElementById(id); };
+const esc = function(s){ return String(s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); };
+const FIELDS = ['pharmacy','contact','phone','address','method','dinfo','memo'];
+
+function load(){
+  try{
+    const s = JSON.parse(localStorage.getItem(STORE_KEY) || '{}');
+    Object.keys(s.cart || {}).forEach(function(code){
+      const it = BY[code], c = s.cart[code];
+      if(it && !it.off && c && specOK(it, c.s) && c.n >= 1) cart[code] = {s:c.s, n:Math.min(Math.floor(c.n), it.weight ? (c.s === '一斤' ? MAX_JIN : 1) : MAX_QTY)};
+    });
+    FIELDS.forEach(function(k){ if(s.form && s.form[k]) $('i-' + k).value = s.form[k]; });
+    if(s.form && s.form.delivery === '其他') $('d-other').checked = true;
+    clientId = s.clientId || '';
+  }catch(e){}
+}
+function save(){
+  try{
+    const form = {delivery: $('d-other').checked ? '其他' : '郵局'};
+    FIELDS.forEach(function(k){ form[k] = $('i-' + k).value; });
+    localStorage.setItem(STORE_KEY, JSON.stringify({cart:cart, form:form, clientId:clientId}));
+  }catch(e){}
+}
+function newId(){ return Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10) + Math.random().toString(36).slice(2, 6); }
+function touchCart(){ clientId = ''; $('fail').hidden = true; save(); }   /* 清單一改，就當成一張新的單 */
+const count = function(){ return Object.keys(cart).length; };
+
+/* ================= 份量階梯（秤重品項） ================= */
+function ladder(it){
+  const L = it.specs.map(function(s){ return {s:s, n:1}; });
+  if(it.multi) for(let n = 2; n <= MAX_JIN; n++) L.push({s:'一斤', n:n});
+  return L;
+}
+function stepWeight(it, dir){
+  const L = ladder(it), c = cart[it.code];
+  let i = c ? L.findIndex(function(x){ return x.s === c.s && x.n === c.n; }) : -1;
+  i += dir;
+  if(i < 0) delete cart[it.code]; else if(i < L.length) cart[it.code] = {s:L[i].s, n:L[i].n};
+}
+function setCount(it, n){
+  n = Math.floor(Number(n)); if(!isFinite(n) || n < 0) n = 0; if(n > MAX_QTY) n = MAX_QTY;
+  const c = cart[it.code];                                   /* 已經選好的規格要留著（G22 小顆／大顆） */
+  if(n === 0) delete cart[it.code]; else cart[it.code] = {s: c ? c.s : (it.askOnly ? ASK_SPEC : it.specs[0]), n:n};
+}
+const lineText = function(it, c){ return it.name + '　' + c.s + ' × ' + c.n; };
+function codeQty(it, c){                                   /* 訂單碼：秤重品項以「兩」計，1 錢 = 0.1 兩 */
+  if(LIANG[c.s]) return LIANG[c.s] * c.n;
+  const m = /^(\d+)\s*錢$/.exec(c.s); if(m) return Math.round(Number(m[1]) * c.n) / 10;
+  return c.n;
+}
+
+/* ================= 畫面：商品 ================= */
+function photo(it, cls){
+  return '<button type="button" class="ph ' + (cls || '') + '" data-zoom="' + it.code + '" aria-label="放大 ' + esc(it.name) + ' 照片"><span class="ini" aria-hidden="true">' + esc(it.name.replace(/^拾貳盞｜/, '').replace(/^[0-9A-Za-z]+/, '').charAt(0)) + '</span><img src="' + IMG_DIR + it.code + '.jpg" alt="" loading="lazy" data-ph></button>';
+}
+function noteHTML(note){                                     /* 短的片段（例：每盒 10 入）整段不換行 */
+  return String(note).split('・').map(function(seg){ return seg.length <= 14 ? '<span class="nb">' + esc(seg) + '</span>' : esc(seg); }).join('・');
+}
+function stepper(it){
+  const n = cart[it.code] ? cart[it.code].n : 0;
+  const need = it.choice && !cart[it.code] ? ' disabled' : '';   /* 多規格品項：先選規格，才能用加減鈕 */
+  return '<div class="qty"><div class="step"><button type="button" data-k="dec" aria-label="減少 ' + esc(it.name) + '"' + (n ? '' : ' disabled') + '>−</button><input data-k="num" type="number" inputmode="numeric" min="0" max="' + MAX_QTY + '" value="' + n + '" aria-label="' + esc(it.name) + ' 數量"' + need + '><button type="button" data-k="inc" aria-label="增加 ' + esc(it.name) + '"' + need + '>＋</button></div><span>' + esc(it.unit) + '</span></div>';
+}
+function picker(it){                                         /* 多規格（非秤重）品項的規格鈕；只有一種規格的品項不會出現 */
+  if(!it.choice) return '';
+  const c = cart[it.code];
+  return '<div class="pick" role="group" aria-label="' + esc(it.name) + ' 規格">' + it.specs.map(function(s){
+    const on = !!c && c.s === s;
+    return '<button type="button" class="chip" data-k="pick" data-s="' + esc(s) + '" aria-pressed="' + on + '">' + esc(s) + '</button>';   /* ✓ 由 CSS 畫，選不選都佔同樣寬度 */
+  }).join('') + '<span class="help hint"' + (c ? ' style="visibility:hidden" aria-hidden="true"' : '') + '>請先選規格</span></div>';
+}
+const pendTag = function(it){ return it.pending ? '<span class="tag">' + PENDING + '</span>' : ''; };
+function chips(it){
+  const c = cart[it.code]; let h = '';
+  it.specs.forEach(function(s){
+    const on = !!c && c.s === s && c.n === 1;
+    h += '<button type="button" class="chip" data-k="spec" data-s="' + esc(s) + '" aria-pressed="' + on + '">' + esc(s) + '</button>';
+  });
+  if(it.multi){
+    const big = !!c && c.n > 1;
+    if(moreOpen[it.code] || big){
+      [2, 3].forEach(function(n){ const on = !!c && c.s === '一斤' && c.n === n; h += '<button type="button" class="chip" data-k="jin" data-n="' + n + '" aria-pressed="' + on + '">' + n + ' 斤</button>'; });
+      if(c && c.n > 3) h += '<button type="button" class="chip" data-k="noop" aria-pressed="true">' + c.n + ' 斤</button>';
+    }else h += '<button type="button" class="chip more" data-k="more" aria-expanded="false">更多份量</button>';
+  }
+  return h;
+}
+function itemHTML(it, mode, showCat){
+  const on = cart[it.code] ? ' on' : '';
+  if(mode === 'card'){
+    return '<article class="pcard' + on + '" data-code="' + it.code + '" data-mode="card">' + photo(it) + '<div class="body"><div class="nm">' + esc(it.name) + '</div><div class="help">' + pendTag(it) + noteHTML(it.note) + '</div>' + picker(it) + stepper(it) + '</div></article>';
+  }
+  const ctl = it.off ? '<div class="offbox">規格確認中，暫不開放選購。需要請寫在備註。</div>' : '<div class="ctl">' + (it.weight ? chips(it) : picker(it) + stepper(it)) + '</div>';
+  return '<div class="row' + on + '" data-code="' + it.code + '" data-mode="row"' + (showCat ? ' data-cat="1"' : '') + '>' + photo(it) + '<div class="txt"><div class="nm">' + esc(it.name) + '</div>' +
+    ((showCat || it.note || it.pending) ? '<div class="help">' + (showCat ? '<span class="tag">' + esc(it.cat) + '</span>' : '') + pendTag(it) + noteHTML(it.note) + '</div>' : '') +
+    (it.askOnly ? '<div class="help">想要的做法、材料請寫在備註。</div>' : '') + '</div>' + ctl + '</div>';
+}
+function renderList(){
+  const k = kw.trim().toLowerCase(); let h = '';
+  if(k){
+    const hit = ITEMS.filter(function(it){ return it.hay.indexOf(k) >= 0; });
+    h = hit.length ? '<section class="sec"><h2>搜尋結果 ' + hit.length + ' 項</h2><div class="rows">' + hit.map(function(it){ return itemHTML(it, 'row', true); }).join('') + '</div></section>'
+                   : '<div class="empty">找不到這個品項。<br>可以直接寫在備註，我們幫您確認。</div>';
+  }else{
+    CATS.forEach(function(c){
+      if(curCat !== '全部' && curCat !== c) return;
+      const g = ITEMS.filter(function(it){ return it.cat === c; });
+      const card = CARD_CATS.indexOf(c) >= 0;
+      h += '<section class="sec"><h2>' + esc(c) + '</h2><div class="' + (card ? 'grid' : 'rows') + '">' + g.map(function(it){ return itemHTML(it, card ? 'card' : 'row', false); }).join('') + '</div></section>';
+    });
+  }
+  $('list').innerHTML = h;
+}
+function refreshItem(code, focusSel){
+  const it = BY[code];
+  redrawing = true;                                          /* 換掉輸入中的欄位時瀏覽器會再觸發一次 change，這裡擋掉 */
+  document.querySelectorAll('#list [data-code="' + code + '"]').forEach(function(el){
+    if(!el.isConnected) return;
+    const t = document.createElement('div');
+    t.innerHTML = itemHTML(it, el.dataset.mode, el.dataset.cat === '1');
+    const neu = t.firstChild; el.replaceWith(neu);
+    if(focusSel){ const f = neu.querySelector(focusSel); if(f && !f.disabled) f.focus({preventScroll:true}); }
+  });
+  redrawing = false;
+}
+function renderCats(){
+  const mk = function(c){ return '<button type="button" class="cat" data-cat="' + esc(c) + '" aria-pressed="' + (c === curCat && !kw.trim()) + '">' + esc(c) + '</button>'; };
+  $('cats').innerHTML = mk('全部') + CATS.map(mk).join('') + '<button type="button" class="cat all" data-all="1">全部分類</button>';
+  $('catGrid').innerHTML = mk('全部') + CATS.map(mk).join('');
+}
+function renderBar(){ $('openCart').textContent = '查看清單・已選 ' + count() + ' 項'; }
+
+/* ================= 畫面：購物車 ================= */
+function renderLines(){
+  const codes = ITEMS.filter(function(it){ return cart[it.code]; }).map(function(it){ return it.code; });
+  if(!codes.length){
+    $('lines').innerHTML = '<div class="empty" style="padding:16px 0">清單還沒有商品</div><button class="sub" type="button" data-k="goList">返回選購</button>';
+  }else{
+    $('lines').innerHTML = codes.map(function(code){
+      const it = BY[code], c = cart[code];
+      const atMax = it.weight ? (c.s === '一斤' && it.multi ? c.n >= MAX_JIN : it.specs.indexOf(c.s) === it.specs.length - 1 && !it.multi) : c.n >= MAX_QTY;
+      return '<div class="line" data-code="' + code + '"><div class="nm">' + esc(it.name) + (it.pending ? '<span class="tag">' + PENDING + '</span>' : '') + '</div>' +
+        '<div class="l2"><span class="sq">' + esc(c.s) + ' × ' + c.n + '</span><div class="ops"><div class="step"><button type="button" data-k="dec" aria-label="減少 ' + esc(it.name) + '">−</button><span class="n" aria-live="polite">' + c.n + '</span><button type="button" data-k="inc" aria-label="增加 ' + esc(it.name) + '"' + (atMax ? ' disabled' : '') + '>＋</button></div><button type="button" class="rm" data-k="rm">移除</button></div></div></div>';
+    }).join('') +
+      /* 這一頁不算、也不顯示任何金額；運費等嘉榮鎖定報價時才計算 */
+      '<div class="sumrow"><span>運費</span><span>' + TBC + '</span></div>' +
+      '<p class="help" style="margin:4px 0 0">這裡不顯示價格。金額與運費在報價完成後，用 LINE 通知您查看並確認。</p>';
+  }
+  $('submitBtn').disabled = !codes.length || sending;
+  $('submitWhy').hidden = !!codes.length;
+}
+
+/* ================= 切換畫面 ================= */
+function show(view){
+  ['list','cart','done','text','quote'].forEach(function(v){ $('v-' + v).hidden = v !== view; });
+  $('title').textContent = view === 'cart' ? '訂購清單' : view === 'quote' ? '訂單報價' : '藥局訂購';
+  $('backBtn').hidden = view !== 'cart';
+  if(view === 'cart'){ renderLines(); syncDelivery(); }
+  if(view === 'list'){ renderList(); renderBar(); renderLast(); }
+  window.scrollTo(0, 0);
+}
+function syncDelivery(){
+  const other = $('d-other').checked;
+  $('otherBox').hidden = !other;
+  $('r-post').classList.toggle('on', !other); $('r-other').classList.toggle('on', other);
+  $('l-address').textContent = other ? '收件地址（店到店免填）' : '收件地址';
+  if(other) $('f-address').classList.remove('bad');
+}
+function syncReceipt(){                                       /* 收據：勾選才顯示欄位；取消勾選就隱藏並清空 */
+  const on = $('i-receipt').checked;
+  $('receiptBox').hidden = !on; $('r-receipt').classList.toggle('on', on);
+  if(!on) ['rtitle','rtaxid'].forEach(function(k){ $('i-' + k).value = ''; $('f-' + k).classList.remove('bad'); });
+}
+function receiptMemo(memo){                                  /* 收據：勾選時在備註最前面加一行，後端不必改 */
+  if(!$('i-receipt').checked) return memo;
+  const t = $('i-rtitle').value.trim(), n = $('i-rtaxid').value.trim();
+  return '【需要收據】抬頭：' + t + (n ? '／統編：' + n : '') + (memo ? '\n' + memo : '');
+}
+
+/* ================= 驗證與送出 ================= */
+function validate(){
+  const other = $('d-other').checked, bad = [];
+  const need = function(k, ok){ $('f-' + k).classList.toggle('bad', !ok); if(!ok) bad.push(k); };
+  const v = function(k){ return $('i-' + k).value.trim(); };
+  need('pharmacy', v('pharmacy').length >= 2);
+  need('contact', v('contact').length >= 1);
+  need('phone', /^[0-9+\-\s()#]{8,20}$/.test(v('phone')) && v('phone').replace(/\D/g, '').length >= 8);
+  need('address', other || v('address').length >= 5);
+  need('dinfo', !other || v('dinfo').length >= 2);          /* 店到店只需要門市名稱 */
+  const rc = $('i-receipt').checked;
+  need('rtitle', !rc || v('rtitle').length >= 1);            /* 收據：有勾才檢查 */
+  need('rtaxid', !rc || v('rtaxid') === '' || /^\d{8}$/.test(v('rtaxid')));
+  if(bad.length){ const el = $('i-' + bad[0]); el.scrollIntoView({block:'center'}); el.focus({preventScroll:true}); }
+  return !bad.length;
+}
+function payload(){
+  const v = function(k){ return $('i-' + k).value.trim(); };
+  const other = $('d-other').checked;
+  const items = ITEMS.filter(function(it){ return cart[it.code]; }).map(function(it){ const c = cart[it.code]; return {code:it.code, name:it.name, spec:c.s, qty:c.n, unit:it.unit, cat:it.cat}; });
+  return {action:'order', clientId:clientId, pharmacy:v('pharmacy'), contact:v('contact'), phone:v('phone'), address:v('address'),
+    delivery: other ? '其他' : '郵局', deliveryMethod: other ? (v('method') || '7-11 店到店') : '', deliveryInfo: other ? v('dinfo') : '', memo:receiptMemo(v('memo')), pageUrl:pageUrl(),
+    items:items, codeLine: items.map(function(x){ return x.code + 'x' + codeQty(BY[x.code], cart[x.code]); }).join(','), website:$('i-website').value};
+}
+function orderText(p){
+  /* 欄位名稱沿用 v1（收件／電話／地址／備註／訂單碼），v1 的報價頁才讀得懂 */
+  const L = ['【訂購單】', '收件：' + p.pharmacy + '（' + p.contact + '）', '電話：' + p.phone];
+  if(p.address) L.push('地址：' + p.address);
+  L.push('配送：' + (p.delivery === '郵局' ? '郵局寄送' : p.deliveryMethod + '（' + p.deliveryInfo + '）'), '');
+  CATS.forEach(function(c){
+    const g = p.items.filter(function(x){ return x.cat === c; }); if(!g.length) return;
+    L.push('■ ' + c);
+    g.forEach(function(x, i){ L.push((i + 1) + '. ' + x.name + '　' + x.spec + ' × ' + x.qty + (BY[x.code] && BY[x.code].pending ? '（' + PENDING + '）' : '')); });
+    L.push('');
+  });
+  L.push('共 ' + p.items.length + ' 項');
+  if(p.memo) L.push('備註：' + p.memo);
+  L.push('', '訂單碼：' + p.codeLine);
+  return L.join('\n');
+}
+function lineHref(text){ return LINE_URL.indexOf('{text}') >= 0 ? LINE_URL.replace('{text}', encodeURIComponent(text)) : LINE_URL; }
+function showText(){
+  const p = payload(), txt = orderText(p);
+  const box = $('out');
+  box.value = txt; $('lineBtn2').href = lineHref(txt); $('textNote').textContent = '';
+  show('text');
+  box.style.height = 'auto';
+  box.style.height = (box.scrollHeight + 4) + 'px';
+  box.style.overflow = 'hidden';
+}
+function copy(text, noteEl, okMsg, fallbackEl){
+  const manual = function(){ noteEl.textContent = '請長按文字，全選後複製。'; if(fallbackEl){ fallbackEl.focus(); fallbackEl.select(); } };
+  try{ navigator.clipboard.writeText(text).then(function(){ noteEl.textContent = okMsg; }, manual); }catch(e){ manual(); }
+}
+async function submit(){
+  if(sending) return;
+  $('fail').hidden = true;
+  if(!count()){ renderLines(); return; }
+  if(!validate()) return;
+  save();
+  if(!APPS_SCRIPT_URL){ showText(); return; }
+  if(!clientId){ clientId = newId(); save(); }               /* 同一張單重試時沿用同一個識別碼，後端不會重複建單 */
+  sending = true; const btn = $('submitBtn'); btn.disabled = true; btn.textContent = '送出中…';
+  let ok = false, orderNo = '', token = '';
+  const ctrl = new AbortController(), timer = setTimeout(function(){ ctrl.abort(); }, 25000);
+  try{
+    const res = await fetch(APPS_SCRIPT_URL, {method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body:JSON.stringify(payload()), redirect:'follow', signal:ctrl.signal});
+    const data = await res.json();
+    ok = !!(data && data.ok && data.orderNo); orderNo = ok ? String(data.orderNo) : ''; token = ok && data.token ? String(data.token) : '';
+  }catch(e){ ok = false; }
+  clearTimeout(timer);
+  sending = false; btn.textContent = '送出訂單'; btn.disabled = false;
+  if(!ok){ $('fail').hidden = false; $('fail').scrollIntoView({block:'center'}); return; }
+  const who = $('i-pharmacy').value.trim();
+  const link = token && pageUrl() ? pageUrl() + '?q=' + token : '';
+  if(token) saveLast({no:orderNo, token:token, last3:$('i-phone').value.replace(/\D/g, '').slice(-3), at:Date.now()});
+  cart = {}; clientId = ''; $('i-memo').value = ''; save();
+  $('i-receipt').checked = false; syncReceipt();
+  $('ono').textContent = orderNo; $('doneNote').textContent = '';
+  $('lineBtn').href = lineHref('訂單編號 ' + orderNo + '\n' + who + (link ? '\n查看報價與確認：' + link : ''));
+  show('done');
+}
+
+/* ================= 記住最近一張訂單 ================= */
+function pageUrl(){ return /^https?:$/.test(location.protocol) ? location.origin + location.pathname : ''; }
+function readLast(){ try{ const x = JSON.parse(localStorage.getItem(LAST_KEY) || 'null'); return x && x.token && Date.now() - (x.at || 0) < 45 * 86400000 ? x : null; }catch(e){ return null; } }
+function saveLast(x){ try{ localStorage.setItem(LAST_KEY, JSON.stringify(x)); }catch(e){} }
+function renderLast(){
+  const x = readLast();
+  $('lastOrder').hidden = !x || !APPS_SCRIPT_URL;
+  if(x) $('lastOrderText').textContent = '您最近的訂單：' + x.no;
+}
+
+/* ================= 報價確認頁 ================= */
+let qToken = '', qLast3 = '', qData = null, qBusy = false;
+async function api(body){
+  const ctrl = new AbortController(), timer = setTimeout(function(){ ctrl.abort(); }, 25000);
+  try{
+    const res = await fetch(APPS_SCRIPT_URL, {method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body:JSON.stringify(body), redirect:'follow', signal:ctrl.signal});
+    return await res.json();
+  }catch(e){ return {ok:false, error:'連線失敗，請稍後再試一次。'}; }
+  finally{ clearTimeout(timer); }
+}
+function quoteGate(msg){
+  $('qGate').hidden = false; $('qBody').hidden = true;
+  $('qGateFail').hidden = !msg; $('qGateFail').textContent = msg || '';
+}
+async function openQuote(){
+  if(qBusy) return;
+  if(!APPS_SCRIPT_URL){ quoteGate('這個頁面還沒有連上訂單系統，請用 LINE 聯絡' + SHOP_NAME + '。'); return; }
+  if(!/^\d{3}$/.test(qLast3)){ $('f-last3').classList.add('bad'); return; }
+  $('f-last3').classList.remove('bad');
+  qBusy = true; const btn = $('qOpen'); btn.disabled = true; btn.textContent = '讀取中…'; $('qGateFail').hidden = true;
+  const d = await api({action:'quote', token:qToken, last3:qLast3});
+  qBusy = false; btn.disabled = false; btn.textContent = '查看報價';
+  if(!d || !d.ok){ quoteGate((d && d.error) || '讀取失敗，請稍後再試一次。'); return; }
+  saveLast({no:d.orderNo, token:qToken, last3:qLast3, at:Date.now()});
+  renderQuote(d);
+}
+function renderQuote(d){
+  qData = d;
+  $('qGate').hidden = true; $('qBody').hidden = false; $('qFail').hidden = true;
+  $('qTitle').textContent = '訂單 ' + d.orderNo;
+  $('qMeta').textContent = d.pharmacy + '｜' + d.statusText;
+  $('qLines').innerHTML = (d.lines || []).map(function(l){
+    return '<div class="line"><div class="nm">' + esc(l.name) + '</div><div class="qspec">' + esc(l.spec) + ' × ' + esc(l.qty) + '</div>' +
+      (l.amountText ? '<div class="top"><span class="help">小計</span><span class="sq amt">' + esc(l.amountText) + '</span></div>' : '') + '</div>';
+  }).join('');
+  $('qSum').innerHTML = (d.sums || []).map(function(x, i, arr){
+    return '<div class="sumrow' + (i === arr.length - 1 ? ' total' : '') + '"><span>' + esc(x[0]) + '</span><span>' + esc(x[1]) + '</span></div>';
+  }).join('');
+  $('qShip').textContent = d.shipText || ''; $('qShip').hidden = !d.shipText;
+  const btn = $('qConfirm');
+  btn.hidden = !d.canConfirm; btn.disabled = false; btn.textContent = '確認訂單';
+  $('qAfter').textContent = d.afterText || '';
+}
+async function confirmQuote(){
+  if(qBusy || !qData || !qData.canConfirm) return;
+  qBusy = true; const btn = $('qConfirm'); btn.disabled = true; btn.textContent = '確認中…'; $('qFail').hidden = true;
+  const d = await api({action:'confirm', token:qToken, last3:qLast3, version:qData.version});
+  qBusy = false;
+  if(!d || !d.ok){
+    btn.disabled = false; btn.textContent = '確認訂單';
+    $('qFail').hidden = false; $('qFail').textContent = (d && d.error) || '確認沒有成功，請再按一次。';
+    if(d && d.quote) renderQuote(d.quote);                   /* 報價在這段時間被更新過：直接換成新的內容 */
+    return;
+  }
+  renderQuote(d);
+}
+function startQuote(token){
+  qToken = token; qData = null;
+  const x = readLast();
+  qLast3 = x && x.token === token && /^\d{3}$/.test(x.last3 || '') ? x.last3 : '';
+  $('i-last3').value = qLast3;
+  show('quote'); quoteGate('');
+  if(qLast3) openQuote();                                    /* 這台裝置認得：不用再輸入 */
+}
+
+/* ================= 事件 ================= */
+document.addEventListener('error', function(e){ const t = e.target; if(t && t.tagName === 'IMG' && t.hasAttribute('data-ph')){ const b = t.parentNode; t.remove(); b.removeAttribute('data-zoom'); b.disabled = true; b.setAttribute('aria-hidden', 'true'); } }, true);
+document.addEventListener('load', function(e){ const t = e.target; if(t && t.tagName === 'IMG' && t.hasAttribute('data-ph')) t.classList.add('ok'); }, true);   /* 照片載入成功才顯示，缺圖時只看到色塊與首字 */
+$('list').addEventListener('click', function(e){
+  const z = e.target.closest('[data-zoom]');
+  if(z && z.querySelector('img.ok')){ const it = BY[z.dataset.zoom]; $('zoomImg').src = IMG_DIR + it.code + '.jpg'; $('zoomCap').textContent = it.name; $('zoom').hidden = false; return; }
+  const b = e.target.closest('[data-k]'); if(!b) return;
+  const code = b.closest('[data-code]').dataset.code, it = BY[code], k = b.dataset.k, c = cart[code];
+  let focusSel = '[data-k="' + k + '"]';
+  if(k === 'pick'){ const s = b.dataset.s; cart[code] = {s:s, n: c ? c.n : 1}; focusSel = '[data-k="pick"][data-s="' + s + '"]'; }   /* 換規格：數量保留 */
+  else if(k === 'spec'){ const s = b.dataset.s; if(c && c.s === s && c.n === 1) delete cart[code]; else cart[code] = {s:s, n:1}; focusSel = '[data-k="spec"][data-s="' + s + '"]'; }
+  else if(k === 'jin'){ const n = Number(b.dataset.n); if(c && c.s === '一斤' && c.n === n) delete cart[code]; else cart[code] = {s:'一斤', n:n}; moreOpen[code] = true; focusSel = '[data-k="jin"][data-n="' + n + '"]'; }
+  else if(k === 'more'){ moreOpen[code] = true; focusSel = '[data-k="jin"]'; }
+  else if(k === 'inc'){ setCount(it, (c ? c.n : 0) + 1); }
+  else if(k === 'dec'){ setCount(it, (c ? c.n : 0) - 1); }
+  else return;
+  touchCart(); refreshItem(code, focusSel); renderBar();
+});
+$('list').addEventListener('change', function(e){
+  if(redrawing || e.target.dataset.k !== 'num' || !e.target.isConnected) return;
+  const code = e.target.closest('[data-code]').dataset.code;
+  setCount(BY[code], e.target.value); touchCart(); refreshItem(code); renderBar();
+});
+$('lines').addEventListener('click', function(e){
+  const b = e.target.closest('[data-k]'); if(!b) return;
+  if(b.dataset.k === 'goList'){ show('list'); return; }
+  const code = b.closest('[data-code]').dataset.code, it = BY[code], c = cart[code], k = b.dataset.k;
+  if(k === 'rm') delete cart[code];
+  else if(it.weight) stepWeight(it, k === 'inc' ? 1 : -1);
+  else setCount(it, c.n + (k === 'inc' ? 1 : -1));
+  touchCart(); renderLines();
+  const again = document.querySelector('#lines [data-code="' + code + '"] [data-k="' + k + '"]'); if(again && !again.disabled) again.focus({preventScroll:true});
+});
+function pickCat(c){ curCat = c; kw = ''; $('q').value = ''; $('qClear').hidden = true; $('catSheet').hidden = true; renderCats(); renderList(); const y = $('list').getBoundingClientRect().top + window.scrollY - document.querySelector('.tools').offsetHeight; if(window.scrollY > y) window.scrollTo(0, y); }
+$('cats').addEventListener('click', function(e){ const b = e.target.closest('.cat'); if(!b) return; if(b.dataset.all){ $('catSheet').hidden = false; return; } pickCat(b.dataset.cat); });
+$('catGrid').addEventListener('click', function(e){ const b = e.target.closest('.cat'); if(b) pickCat(b.dataset.cat); });
+$('catSheet').addEventListener('click', function(e){ if(e.target === $('catSheet')) $('catSheet').hidden = true; });
+$('zoom').addEventListener('click', function(){ $('zoom').hidden = true; });
+document.addEventListener('keydown', function(e){ if(e.key === 'Escape'){ $('zoom').hidden = true; $('catSheet').hidden = true; $('calcSheet').hidden = true; } });
+$('q').addEventListener('input', function(e){ kw = e.target.value; $('qClear').hidden = !kw; renderCats(); renderList(); });
+$('qClear').addEventListener('click', function(){ kw = ''; $('q').value = ''; $('qClear').hidden = true; renderCats(); renderList(); $('q').focus(); });
+$('openCart').addEventListener('click', function(){ show('cart'); });
+$('backBtn').addEventListener('click', function(){ show('list'); });
+$('again').addEventListener('click', function(){ show('list'); });
+$('textBack').addEventListener('click', function(){ show('cart'); });
+$('toText').addEventListener('click', showText);
+$('form').addEventListener('submit', function(e){ e.preventDefault(); submit(); });
+$('form').addEventListener('input', function(e){ const f = e.target.closest('.field'); if(f) f.classList.remove('bad'); save(); });
+$('d-post').addEventListener('change', function(){ syncDelivery(); save(); });
+$('d-other').addEventListener('change', function(){ syncDelivery(); save(); });
+$('i-receipt').addEventListener('change', syncReceipt);
+$('i-rtaxid').addEventListener('input', function(e){ e.target.value = e.target.value.replace(/\D/g, '').slice(0, 8); });
+$('lastOrderBtn').addEventListener('click', function(){ const x = readLast(); if(x) startQuote(x.token); });
+$('calcBtn').addEventListener('click', function(){ $('calcSheet').hidden = false; });
+$('calcClose').addEventListener('click', function(){ $('calcSheet').hidden = true; });
+$('calcSheet').addEventListener('click', function(e){ if(e.target === $('calcSheet')) $('calcSheet').hidden = true; });
+$('i-last3').addEventListener('input', function(e){ e.target.value = e.target.value.replace(/\D/g, '').slice(0, 3); $('f-last3').classList.remove('bad'); });
+$('i-last3').addEventListener('keydown', function(e){ if(e.key === 'Enter'){ qLast3 = $('i-last3').value; openQuote(); } });
+$('qOpen').addEventListener('click', function(){ qLast3 = $('i-last3').value; openQuote(); });
+$('qConfirm').addEventListener('click', confirmQuote);
+$('qBack').addEventListener('click', function(){ if(history.replaceState && pageUrl()) history.replaceState(null, '', pageUrl()); show('list'); });
+$('copyNo').addEventListener('click', function(){ copy($('ono').textContent, $('doneNote'), '已複製單號'); });
+$('copyText').addEventListener('click', function(){ copy($('out').value, $('textNote'), '已複製，請貼到 LINE 傳給' + SHOP_NAME + '。', $('out')); });
+
+load(); pruneCart(); renderCats(); syncReceipt();
+(function(){
+  let q = ''; try{ q = new URLSearchParams(location.search).get('q') || ''; }catch(e){}
+  if(/^[A-Za-z0-9]{16,80}$/.test(q)) startQuote(q); else show('list');
+})();
+refreshCatalog();
+})();
+</script>
+</body>
+</html>
