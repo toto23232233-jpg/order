@@ -523,6 +523,7 @@ const ALIASES = [['晉耆','黃耆 北耆 黃芪'],['淮山','山藥 懷山'],['
 const CARD_CATS = ['御膳方藥膳包','拾貳盞茶飲'];
 const LIANG = {'二兩':2,'四兩':4,'半斤':8,'一斤':16};
 const MAX_JIN = 10, MAX_QTY = 999;
+const SEND_TIMEOUT = 40000, SEND_TRIES = 2;   /* 送單：每次最多等 40 秒；沒有收到後端回答時自動再送一次（同一個識別碼，後端不會重複建單） */
 const ASK_SPEC = '洽詢', PENDING = '待報價', TBC = '待確認';
 
 const CATS = []; const BY = {};
@@ -818,13 +819,20 @@ async function submit(){
   if(!clientId){ clientId = newId(); save(); }               /* 同一張單重試時沿用同一個識別碼，後端不會重複建單 */
   sending = true; const btn = $('submitBtn'); btn.disabled = true; btn.textContent = '送出中…';
   let ok = false, orderNo = '', token = '';
-  const ctrl = new AbortController(), timer = setTimeout(function(){ ctrl.abort(); }, 25000);
-  try{
-    const res = await fetch(APPS_SCRIPT_URL, {method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body:JSON.stringify(payload()), redirect:'follow', signal:ctrl.signal});
-    const data = await res.json();
-    ok = !!(data && data.ok && data.orderNo); orderNo = ok ? String(data.orderNo) : ''; token = ok && data.token ? String(data.token) : '';
-  }catch(e){ ok = false; }
-  clearTimeout(timer);
+  const body = JSON.stringify(payload());
+  for(let tries = 1; tries <= SEND_TRIES; tries++){
+    let answered = false;                                     /* 後端有沒有回答（不管成功或拒絕） */
+    const ctrl = new AbortController(), timer = setTimeout(function(){ ctrl.abort(); }, SEND_TIMEOUT);
+    try{
+      const res = await fetch(APPS_SCRIPT_URL, {method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body:body, redirect:'follow', signal:ctrl.signal});
+      const data = await res.json();
+      answered = true;
+      ok = !!(data && data.ok && data.orderNo); orderNo = ok ? String(data.orderNo) : ''; token = ok && data.token ? String(data.token) : '';
+    }catch(e){ ok = false; }
+    clearTimeout(timer);
+    if(ok || answered) break;                                 /* 成功，或後端明確拒絕：不重送 */
+    if(tries < SEND_TRIES) btn.textContent = '還在送出，請稍候…';   /* 逾時或連線中斷：這時不顯示失敗訊息，直接再送一次 */
+  }
   sending = false; btn.textContent = '送出訂單'; btn.disabled = false;
   if(!ok){ $('fail').hidden = false; $('fail').scrollIntoView({block:'center'}); return; }
   const who = $('i-pharmacy').value.trim();
