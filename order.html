@@ -6,10 +6,17 @@
 <meta name="theme-color" content="#FFFDF9">
 <title>藥局訂購</title>
 <style>
-/* r3（r2＋馬面 V2→V3 審查的 A 類修正）：依 ux-spec-mamian.md 與 ux-review-mamian.md。暖米白紙面、茶綠主色、細線分隔、不用陰影（只有底部固定列有極淡陰影）。基準寬 390px，驗收 320–430px。 */
+/* r4（r3＋馬面 V3 審查的 B 類美編＋r4 決議）：依 ux-spec-mamian.md 與 ux-review-mamian.md。暖米白紙面、茶綠主色、不用陰影。基準寬 390px，驗收 320–430px。
+   框線分兩種：
+     有意義的（分辨可點、選中、可輸入）→ --ctl 或 --green，和相鄰底色的對比都 ≥ 3:1
+     裝飾的（卡片外框、分隔線）        → --edge、--line，可以淺 */
 :root{
   --page:#F7F4EE; --card:#FFFDF9; --photo:#F3EDE4; --ink:#292D27; --ink2:#62675D;
-  --green:#244B38; --on:#FFFFFF; --sel:#E6EEE6; --line:#DDD8CE; --ctl:#8A8E82; --chipline:#C2C3B8; --wood:#795A40;
+  --green:#244B38; --on:#FFFFFF; --sel:#E6EEE6; --wood:#795A40;
+  --ctl:#82877A;      /* 有意義的框線：未選的規格鈕、分類鈕、輸入框、單選／核取框。對卡片 3.63、白 3.69、頁面 3.36、淡綠 3.11 */
+  --line:#DDD8CE;     /* 裝飾：分隔線、標題列底線 */
+  --edge:#E4DFD5;     /* 裝飾：卡片外框、選項列外框 */
+  --fill:#F0EDE6;     /* 控制器底色：搜尋欄、數量控制（不靠框線） */
   --tip:#F4EBDD; --tip-ink:#725126; --red:#A33025; --red-bg:#FBECE8; --off:#EAE7E0; --off-ink:#676960;
   --pad:16px;
   color-scheme:light;
@@ -30,44 +37,55 @@ button{cursor:pointer;-webkit-tap-highlight-color:transparent}
 .help{font-size:14px;line-height:21px;color:var(--ink2);margin:0}
 .empty{padding:24px 0;text-align:center;color:var(--ink2);margin:0}
 
-/* 標題列：暖白平面、茶綠文字、細底線 */
+/* 標題列（B01）：56px、暖白平面、細底線；店名不搶標題 */
 .hd{height:56px;display:flex;align-items:center;gap:8px;padding:0 var(--pad);background:var(--card);border-bottom:1px solid var(--line)}
-.hd h1{flex:1;min-width:0;margin:0;font-size:22px;line-height:30px;font-weight:700;color:var(--green)}
-.hd .shop{flex:none;font-size:14px;line-height:21px;color:var(--wood)}
-.hback{flex:none;min-width:44px;height:44px;margin-left:-8px;padding:0 8px;border:0;background:none;color:var(--green);font-size:16px;line-height:24px;font-weight:700}
+.hd h1{flex:1;min-width:0;margin:0;font-size:20px;line-height:28px;font-weight:700;color:var(--green)}
+.hd .shop{flex:none;font-size:14px;line-height:21px;font-weight:500;color:var(--wood)}
+.hback{flex:none;min-width:44px;height:44px;margin-left:-8px;padding:0 8px;border:0;background:none;color:var(--green);font-size:16px;line-height:24px;font-weight:600}
 
 /* 搜尋與分類（黏在頂部，約 112px） */
 .tools{position:sticky;top:0;z-index:5;background:var(--page);padding:8px var(--pad) 4px;display:flex;flex-direction:column;gap:8px;border-bottom:1px solid var(--line)}
 .search{position:relative}
-.search input{width:100%;height:48px;border:1px solid var(--ctl);border-radius:10px;background:var(--card);padding:0 48px 0 44px;font-size:16px}
+/* 搜尋欄（B02）：柔和填色、平常沒有框，聚焦才出現茶綠框。字級 16px，iPhone 不會自動放大畫面 */
+.search input{width:100%;height:48px;border:1px solid transparent;border-radius:12px;background:var(--fill);padding:0 48px 0 44px;font-size:16px;line-height:24px}
+.search input:focus{outline:none;background:var(--card);border-color:var(--green);box-shadow:inset 0 0 0 1px var(--green)}
 .search svg{position:absolute;left:14px;top:14px;width:20px;height:20px;stroke:var(--ink2)}
 .search .clear{position:absolute;right:2px;top:2px;width:44px;height:44px;border:0;background:none;font-size:22px;line-height:1;color:var(--ink2)}
 .search input[type="search"]::-webkit-search-cancel-button,
 .search input[type="search"]::-webkit-search-decoration{-webkit-appearance:none;appearance:none}
 .catbar{display:flex;gap:8px;align-items:center}
-.catall{flex:none;min-width:72px;height:44px;padding:0 10px;border:1px solid var(--green);border-radius:10px;background:var(--card);color:var(--green);font-size:15px;line-height:22px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:6px}
+.catall{flex:none;min-width:72px;height:44px;padding:0 10px;border:1px solid var(--green);border-radius:8px;background:var(--card);color:var(--green);font-size:15px;line-height:22px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:6px}
 .catall svg{width:16px;height:16px;flex:none}
 .cats{position:relative;flex:1;min-width:0;display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;margin-right:calc(var(--pad) * -1);padding-right:32px;-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 32px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 32px),transparent)}
 .cats::-webkit-scrollbar{display:none}
-.cat{flex:none;min-height:44px;padding:0 12px;border:1px solid var(--ctl);border-radius:10px;background:var(--card);color:var(--ink);font-size:15px;line-height:22px;font-weight:500;white-space:nowrap}
-.cat[aria-pressed="true"]{background:var(--sel);border-color:var(--green);box-shadow:inset 0 0 0 1px var(--green);color:var(--green);font-weight:700}
+.cat{flex:none;min-height:44px;padding:0 12px;border:1px solid var(--ctl);border-radius:8px;background:var(--card);color:var(--ink);font-size:15px;line-height:22px;font-weight:500;white-space:nowrap}
+.cat[aria-pressed="true"]{background:var(--sel);border-color:var(--green);color:var(--green);font-weight:700}
 
-/* 首頁的次級列：出貨與運費說明（收合）、藥膳用量試算、上次報價 */
-.links{padding:0 var(--pad)}
-.lrow{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;min-height:44px;padding:0;border:0;border-bottom:1px solid var(--line);background:none;color:var(--ink);font-size:15px;line-height:22px;font-weight:600;text-align:left}
+/* 首頁的次級列（B04）：出貨與運費說明是「說明」（14px／500、純文字列）；藥膳用量試算是「工具入口」（淡茶綠底、15px／600、有圖示） */
+.links{padding:0 var(--pad);display:flex;flex-direction:column}
+.lrow{display:flex;align-items:center;gap:8px;width:100%;min-height:44px;padding:0;border:0;background:none;color:var(--ink);font-size:14px;line-height:21px;font-weight:500;text-align:left}
+.lrow > span:first-of-type{flex:1;min-width:0}
+.lrow svg{flex:none;width:18px;height:18px;color:var(--ink2)}
 .lrow .arr{flex:none;color:var(--ink2)}
 .lrow[aria-expanded="true"] .arr{transform:rotate(180deg)}
-.info{padding:8px 0 4px;border-bottom:1px solid var(--line);font-size:14px;line-height:21px}
+.lrow.go{border-bottom:1px solid var(--line);font-size:15px;line-height:22px;font-weight:600}   /* 列表裡的「還有 N 項相關品項」 */
+.info{padding:0 0 8px;font-size:14px;line-height:21px}
 .info p{margin:0 0 8px}
+.tool{display:flex;align-items:center;gap:10px;width:100%;min-height:52px;margin:4px 0;padding:6px 12px;border:0;border-radius:10px;background:var(--sel);color:var(--ink);text-align:left}
+.tool svg{flex:none;width:18px;height:18px;color:var(--green)}
+.tool .tt{flex:1;min-width:0;display:flex;flex-direction:column}
+.tool b{font-size:15px;line-height:20px;font-weight:600;color:var(--green)}
+.tool small{font-size:13px;line-height:20px;color:var(--ink2)}
+.tool .arr{flex:none;font-size:18px;line-height:1;color:var(--green)}
 
-/* 商品列表 */
+/* 商品列表（B05）：卡片只留一層淡外框；數量控制不加外框 */
 .sec{padding:12px var(--pad) 0}
-.sec h2{margin:0 0 8px;font-size:18px;line-height:26px;font-weight:700}
-.subh{margin:12px 0 0;padding:0 0 4px;border-bottom:1px solid var(--line);font-size:14px;line-height:21px;font-weight:700;color:var(--wood)}
+.sec h2{margin:0 0 8px;font-size:18px;line-height:26px;font-weight:600}
+.subh{margin:12px 0 0;padding:0 0 4px;border-bottom:1px solid var(--line);font-size:14px;line-height:21px;font-weight:600;color:var(--wood)}
 .sec h2 + .subh{margin-top:0}
 .subh + .grid{margin-top:12px}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.pcard{background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden;display:flex;flex-direction:column;min-width:0}
+.pcard{background:var(--card);border:1px solid var(--edge);border-radius:12px;overflow:hidden;display:flex;flex-direction:column;min-width:0}
 .pcard.on{border-color:var(--green)}
 .pcard .ph{width:100%;aspect-ratio:1/1}
 .pcard .body{padding:12px 12px 0;display:flex;flex-direction:column;gap:4px;min-width:0}
@@ -92,7 +110,7 @@ button{cursor:pointer;-webkit-tap-highlight-color:transparent}
 .ph.miss .none{display:grid}
 .nm{position:relative;display:block;width:100%;margin:0;padding:0;border:0;background:none;text-align:left;font-size:16px;line-height:24px;font-weight:600;color:var(--ink);overflow-wrap:anywhere}
 .nm::after{content:"";position:absolute;left:0;right:0;top:50%;height:44px;transform:translateY(-50%)}   /* 品名的觸控區加大到 44px，版面不變 */
-.meta{font-size:14px;line-height:21px;color:var(--ink2);overflow-wrap:anywhere}
+.meta{font-size:14px;line-height:20px;color:var(--ink2);overflow-wrap:anywhere}
 .meta.c2,.meta.c3{display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden}
 .meta.c2{-webkit-line-clamp:2}
 .meta.c3{-webkit-line-clamp:3}
@@ -114,8 +132,8 @@ button{cursor:pointer;-webkit-tap-highlight-color:transparent}
 .pick .plab{grid-column:1/-1;margin:0}
 .plab.qlab{margin:12px 0 4px}
 @media (max-width:339px){.pick{grid-template-columns:1fr}}   /* 320px：規格鈕改兩列全寬，不縮字 */
-/* 規格鈕（r3）：單層 1px 框線。選中＝淡綠底＋茶綠框＋勾；勾的位置（14px＋6px 間距）固定留著，選不選都一樣大 */
-.chip{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;min-width:72px;padding:0 18px 0 4px;border:1px solid var(--chipline);border-radius:8px;background:var(--card);color:var(--ink);font-size:15px;line-height:22px;font-weight:600;white-space:nowrap}
+/* 規格鈕：單層 1px 框線。未選用 --ctl（≥ 3:1）；選中＝淡綠底＋茶綠框＋勾。勾的位置（14px＋6px 間距）固定留著，選不選都一樣大 */
+.chip{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;min-width:72px;padding:0 18px 0 4px;border:1px solid var(--ctl);border-radius:8px;background:var(--card);color:var(--ink);font-size:15px;line-height:22px;font-weight:600;white-space:nowrap}
 .chip::before{content:"✓";flex:none;width:14px;font-size:14px;line-height:1;font-weight:700;text-align:center;visibility:hidden}
 .chip[aria-pressed="true"]{background:var(--sel);border-color:var(--green);color:var(--green)}
 .chip[aria-pressed="true"]::before{visibility:visible}
@@ -127,45 +145,56 @@ button{cursor:pointer;-webkit-tap-highlight-color:transparent}
 .pick .chip b{display:block;font-weight:600}
 .pick .chip small{display:block;font-size:13px;line-height:20px;font-weight:400;color:var(--ink2)}   /* 規格的補充說明（例：約 100–120 g） */
 .pick .chip.two{min-height:60px}
-/* 數量控制：減 44／數字 44／加 44，整組 134px */
-.step{flex:none;display:inline-flex;border:1px solid var(--ctl);border-radius:10px;background:var(--card);overflow:hidden}
-.step.on{border-color:var(--green)}
-.step.two button + button{border-left:1px solid var(--line)}
+/* 數量控制（B05）：減 44／數字 44／加 44。沒有外框：靠淡底色和「−」「＋」辨識，加號是茶綠底白字；已選（數量 > 0）才有一圈茶綠框 */
+.step{flex:none;display:inline-flex;border-radius:10px;background:var(--fill);overflow:hidden}
+.step.on{box-shadow:inset 0 0 0 1px var(--green)}
 .step button{width:44px;height:44px;border:0;background:none;color:var(--green);font-size:22px;line-height:1}
-.step button:disabled{background:var(--off);color:var(--off-ink);cursor:default}
-.step input,.step .n{width:44px;height:44px;border:0;border-left:1px solid var(--line);border-right:1px solid var(--line);border-radius:0;background:none;text-align:center;font-size:16px;font-weight:700;padding:0;-moz-appearance:textfield}
+.step button[data-k="inc"]{background:var(--green);color:var(--on)}
+.step button:disabled{background:none;color:var(--off-ink);cursor:default}
+.step button[data-k="inc"]:disabled{background:var(--off)}
+.step input,.step .n{width:44px;height:44px;border:0;border-radius:0;background:none;text-align:center;font-size:16px;font-weight:700;padding:0;-moz-appearance:textfield}
 .step .n{display:grid;place-items:center;white-space:nowrap}
 .step input:disabled{color:var(--off-ink)}
 .step input::-webkit-outer-spin-button,.step input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
 .offbox{background:var(--off);color:var(--off-ink);border-radius:10px;padding:8px 12px;font-size:14px;line-height:21px}
 .spacer{height:calc(88px + env(safe-area-inset-bottom))}
 
-/* 底部固定列 */
-.bar{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--card);box-shadow:0 -2px 12px rgba(41,45,39,.08);padding:12px var(--pad) calc(12px + env(safe-area-inset-bottom))}
+/* 底部固定列（B08）：一條分隔線，不用陰影；按鈕裡「查看訂購清單」和「N 項」分兩層 */
+.bar{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--card);border-top:1px solid var(--line);padding:12px var(--pad) calc(12px + env(safe-area-inset-bottom))}
 .bar .in{max-width:calc(430px - var(--pad) * 2);margin:0 auto}
-.main{display:block;width:100%;min-height:48px;border:0;border-radius:10px;background:var(--green);color:var(--on);font-size:16px;line-height:24px;font-weight:700;text-align:center;text-decoration:none;padding:12px 16px}
+.cartbtn{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;height:48px;padding:0 16px;border:0;border-radius:10px;background:var(--green);color:var(--on);text-align:left}
+.cartbtn .t{font-size:16px;line-height:24px;font-weight:600}
+.cartbtn .c{flex:none;min-width:52px;height:28px;padding:0 10px;border-radius:14px;background:rgba(255,255,255,.16);font-size:14px;line-height:28px;font-weight:500;text-align:center}
+.main{display:block;width:100%;min-height:48px;border:0;border-radius:10px;background:var(--green);color:var(--on);font-size:16px;line-height:24px;font-weight:600;text-align:center;text-decoration:none;padding:12px 16px}
 .main:disabled{background:var(--off);color:var(--off-ink);cursor:not-allowed}
-.sub{display:block;width:100%;min-height:44px;border:1px solid var(--green);border-radius:10px;background:var(--card);color:var(--green);font-size:15px;line-height:22px;font-weight:600;text-align:center;text-decoration:none;padding:10px 16px}
+.sub{display:block;width:100%;min-height:44px;border:1px solid var(--green);border-radius:8px;background:var(--card);color:var(--green);font-size:15px;line-height:22px;font-weight:600;text-align:center;text-decoration:none;padding:10px 16px}
 .txtbtn{display:inline-flex;align-items:center;justify-content:center;min-height:44px;min-width:44px;padding:0 8px;border:0;background:none;color:var(--green);font-size:15px;line-height:22px;font-weight:600;text-decoration:underline;text-underline-offset:3px}
 
-/* 區塊卡片、表單 */
-.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px}
-.card h2{margin:0 0 8px;font-size:18px;line-height:26px;font-weight:700}
+/* 區塊卡片、表單（B07）：外層卡片只有淡外框；輸入框是唯一「有意義的框」；配送、收據選項的框線退成淡色，圓鈕／方框自己畫（≥ 3:1） */
+.card{background:var(--card);border:1px solid var(--edge);border-radius:12px;padding:12px}
+.card h2{margin:0 0 8px;font-size:18px;line-height:26px;font-weight:600}
 .hr{height:1px;background:var(--line);margin:16px 0 12px}
 .lab{font-size:14px;line-height:21px;font-weight:600;margin:0}
-.field{display:flex;flex-direction:column;gap:4px;margin-top:12px}
+.field{display:flex;flex-direction:column;gap:6px;margin-top:12px}
 .card h2 + .field{margin-top:0}
 .field label{font-size:14px;line-height:21px;font-weight:600}
-.field input,.field textarea{width:100%;min-height:48px;border:1px solid var(--ctl);border-radius:10px;background:#fff;padding:11px 12px;font-size:16px;line-height:24px}
-.field textarea{min-height:88px;resize:vertical}
+.field input,.field textarea{width:100%;min-height:48px;border:1px solid var(--ctl);border-radius:8px;background:#fff;padding:11px 12px;font-size:16px;line-height:24px}
+.field textarea{min-height:80px;resize:vertical}
 .field input::placeholder,.field textarea::placeholder,.search input::placeholder{color:var(--ink2);opacity:1}
 .field .err{display:none;font-size:14px;line-height:21px;color:var(--red)}
 .field .err::before{content:"！"}
 .field.bad input,.field.bad textarea{border-color:var(--red);background:var(--red-bg)}
 .field.bad .err{display:block}
-.radio{display:flex;align-items:center;gap:12px;min-height:48px;padding:8px 12px;border:1px solid var(--ctl);border-radius:10px;background:#fff;margin-top:8px;cursor:pointer}
-.radio input{width:20px;height:20px;margin:0;accent-color:var(--green);flex:none}
-.radio.on{border-color:var(--green);box-shadow:inset 0 0 0 1px var(--green);background:var(--sel)}
+.radio{display:flex;align-items:center;gap:12px;min-height:48px;padding:8px 12px;border:1px solid var(--edge);border-radius:8px;background:var(--card);margin-top:8px;cursor:pointer}
+.radio.on{border-color:var(--green);background:var(--sel)}
+.radio input{-webkit-appearance:none;appearance:none;flex:none;display:grid;place-content:center;width:20px;height:20px;margin:0;border:1.5px solid var(--ctl);background:#fff}
+.radio input[type="radio"]{border-radius:50%}
+.radio input[type="checkbox"]{border-radius:4px}
+.radio input::before{content:"";width:10px;height:10px;background:var(--green);transform:scale(0)}
+.radio input[type="radio"]::before{border-radius:50%}
+.radio input[type="checkbox"]::before{width:12px;height:12px;clip-path:polygon(12% 46%,0 60%,40% 100%,100% 22%,88% 10%,40% 72%)}
+.radio input:checked{border-color:var(--green)}
+.radio input:checked::before{transform:scale(1)}
 .radio .side{margin-left:auto;font-size:14px;line-height:21px;color:var(--ink2);text-align:right}
 .alert{background:var(--red-bg);border:1px solid var(--red);color:var(--red);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:8px}
 .tipbox{background:var(--tip);color:var(--tip-ink);border-radius:10px;padding:10px 12px;font-size:14px;line-height:21px}
@@ -207,7 +236,7 @@ details.rule[open] summary{text-decoration:none}
 .done .tick{width:32px;height:32px;margin:0 auto;color:var(--green)}
 .done h2{font-size:22px;line-height:30px}
 .ono{font-size:26px;line-height:34px;font-weight:700;overflow-wrap:anywhere}
-.out{width:100%;min-height:220px;border:1px solid var(--ctl);border-radius:10px;background:#fff;padding:12px;font-size:14px;line-height:21px}
+.out{width:100%;min-height:220px;border:1px solid var(--ctl);border-radius:8px;background:#fff;padding:12px;font-size:14px;line-height:21px}
 .note{font-size:14px;line-height:21px;color:var(--green);font-weight:700;min-height:21px}
 .note:empty{display:none}
 
@@ -216,16 +245,20 @@ details.rule[open] summary{text-decoration:none}
 /* 彈窗三區：上方標題列（固定）／中間內容（唯一會捲動的地方）／下方操作欄（固定，在正常排版裡，不是 position:fixed，不會蓋住內容） */
 .ov .panel{width:100%;max-width:430px;max-height:94vh;max-height:94dvh;background:var(--page);border-radius:20px 20px 0 0;display:flex;flex-direction:column;overflow:hidden}
 .ov .ptop{flex:none;height:48px;display:flex;align-items:center;justify-content:space-between;padding:0 0 0 var(--pad);border-bottom:1px solid var(--line)}
-.ov .ptop h2{margin:0;font-size:16px;line-height:24px;font-weight:700;color:var(--ink2)}
+.ov .ptop h2{margin:0;font-size:16px;line-height:24px;font-weight:600;color:var(--ink2)}
 .ov .pclose{flex:none;min-width:64px;height:48px;border:0;background:none;color:var(--green);font-size:15px;line-height:22px;font-weight:600}
 .ov .pbody{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding:12px var(--pad) 16px}
 .ov .pfoot{position:relative;flex:none;padding:12px var(--pad) calc(12px + env(safe-area-inset-bottom));border-top:1px solid var(--line);background:var(--card)}
 .ov .pfoot::before{content:"";position:absolute;left:0;right:0;bottom:calc(100% + 1px);height:28px;background:linear-gradient(rgba(247,244,238,0),var(--page));pointer-events:none;opacity:0;transition:opacity .15s}
 .ov .panel.more .pfoot::before{opacity:1}   /* 下面還有內容時，操作欄上緣淡出，提示可以往下捲；捲到底就消失 */
+/* 全部分類（B03）：最上面「全部品項」，下面分三組（只是畫面上的分組，分類名稱和資料不動）。分類鈕文字靠左，選中的右邊打勾 */
+.cgroup{margin-top:20px}
+.cgroup h3{margin:0 0 8px;font-size:13px;line-height:20px;font-weight:600;color:var(--wood)}
 .catgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.catgrid .cat{width:100%;min-height:48px;white-space:normal;text-align:left;display:flex;align-items:center;gap:4px}
-.catgrid .cat::before{content:"✓";flex:none;width:16px;visibility:hidden}
-.catgrid .cat[aria-pressed="true"]::before{visibility:visible}
+.catgrid .cat{width:100%;min-height:44px;padding:6px 8px 6px 12px;white-space:normal;text-align:left;display:flex;align-items:center;justify-content:space-between;gap:4px}
+.catgrid .cat::after{content:"✓";flex:none;width:16px;text-align:center;visibility:hidden}
+.catgrid .cat[aria-pressed="true"]::after{visibility:visible}
+.catgrid .cat.all{grid-column:1/-1}
 .dphoto{position:relative;display:block;width:100%;height:200px;margin:0 0 12px;border:0;padding:0;border-radius:10px;background:var(--photo);overflow:hidden}
 .dphoto img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;opacity:0}
 .dphoto img.ok{opacity:1}
@@ -236,10 +269,14 @@ details.rule[open] summary{text-decoration:none}
 .dnone{font-size:13px;line-height:20px;color:var(--ink2)}   /* 沒有照片：不留大圖的空位，只在這裡寫一行 */
 .dspec{margin-top:4px;font-size:15px;line-height:22px}
 .dsec{margin-top:20px}
-.dsec h3{margin:0 0 8px;font-size:18px;line-height:26px;font-weight:700}
+.dsec h3{margin:0 0 8px;font-size:17px;line-height:24px;font-weight:600}
 .dsec p{margin:0}
-.ing{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px;margin:0 0 8px;padding:0;list-style:none}
-.ing li{line-height:24px;overflow-wrap:anywhere}
+/* 成分（B06）：暖白底一塊、雙欄、每列間距 4px、名稱前一顆木棕小圓點。只有名稱，不做成標籤 */
+.ingbox{background:var(--card);border-radius:10px;padding:10px 12px}
+.ing{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:4px 12px;margin:0;padding:0;list-style:none}
+.ing li{position:relative;padding-left:12px;font-size:15px;line-height:22px;overflow-wrap:anywhere}
+.ing li::before{content:"";position:absolute;left:2px;top:9px;width:4px;height:4px;border-radius:50%;background:var(--wood)}
+.dsec .ingnote{margin:8px 0 0;font-size:13px;line-height:20px;color:var(--ink2)}
 .zoom{position:fixed;inset:0;z-index:30;background:rgba(20,22,18,.9);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:16px}
 .zoom img{max-width:100%;max-height:72vh;border-radius:10px;background:var(--photo)}
 .zoom p{margin:0;color:#fff;font-weight:700;text-align:center}
@@ -258,9 +295,12 @@ details.rule[open] summary{text-decoration:none}
 .cline .cl{flex:1 1 auto;min-width:0}
 .cline .cn{font-size:16px;line-height:24px;font-weight:600;overflow-wrap:anywhere}
 .cline .sug{flex:none;font-size:17px;line-height:24px;font-weight:700;color:var(--green);white-space:nowrap}
+.cline .sug .apx{margin-right:4px;font-size:14px;font-weight:600;color:var(--wood)}   /* 「約」：這一行用到約略的每兩顆數 */
 .cline .cask{flex:none;font-size:14px;line-height:21px;font-weight:600;color:var(--wood);white-space:nowrap}
 .cline .pick{margin-top:4px}
 #calcLines[aria-busy="true"]{opacity:.55;pointer-events:none}
+.mto-badge{display:inline-block;border-radius:4px;padding:1px 5px;background:#E6EEE6;color:#244B38;font-size:12px;font-weight:600;white-space:nowrap}
+.mto-info{margin:4px 0 10px;font-size:14px;color:#244B38}
 </style>
 </head>
 <body>
@@ -285,20 +325,20 @@ details.rule[open] summary{text-decoration:none}
       </div>
     </div>
     <div class="links">
-      <button class="lrow" id="infoBtn" type="button" aria-expanded="false" aria-controls="infoBox"><span>出貨與運費說明</span><span class="arr" aria-hidden="true">▾</span></button>
+      <button class="lrow" id="infoBtn" type="button" aria-expanded="false" aria-controls="infoBox"><svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><circle cx="9" cy="9" r="7"/><path d="M9 8.2v4.3M9 5.4v.2"/></svg><span>出貨與運費說明</span><span class="arr" aria-hidden="true">▾</span></button>
       <div class="info" id="infoBox" hidden>
         <p>郵局寄送，週一到週四出貨；週五與國定假日不寄。想趕當週四寄出：請在<b>週四上午 11:00 前</b>下單，並在 <b>11:00 前於 LINE 回覆確認報價</b>。來不及確認的訂單，順延至下一個可出貨日。</p>
         <p>全品項可混搭，滿 $2,500 免運，未滿加收運費 $80，實際金額由我們在 LINE 回覆。</p>
       </div>
-      <button class="lrow" id="calcBtn" type="button"><span>藥膳用量試算</span><span class="arr" aria-hidden="true">›</span></button>
+      <button class="tool" id="calcBtn" type="button"><svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="2" width="11" height="14" rx="2"/><path d="M6.3 5.4h5.4M6.4 9h.1M9 9h.1M11.6 9h.1M6.4 12.3h.1M9 12.3h.1M11.6 12.3h.1"/></svg><span class="tt"><b>藥膳用量試算</b><small>依帖數整理建議訂購量</small></span><span class="arr" aria-hidden="true">›</span></button>
       <button class="lrow" id="lastOrderBtn" type="button" hidden><span id="lastOrderText">查看上次報價</span><span class="arr" aria-hidden="true">›</span></button>
     </div>
     <div id="list"></div>
     <div class="spacer"></div>
-    <div class="bar"><div class="in"><button class="main" id="openCart" type="button">查看訂購清單（0 項）</button></div></div>
+    <div class="bar"><div class="in"><button class="cartbtn" id="openCart" type="button" aria-label="查看訂購清單，已選 0 項"><span class="t">查看訂購清單</span><span class="c" id="cartCount">0 項</span></button></div></div>
   </main>
 
-  <!-- 藥膳用量試算（配方不在這個檔案裡；帖數送到後端，後端只回傳「建議訂購規格 × 數量」或「請洽嘉榮」） -->
+  <!-- 藥膳用量試算（配方不在這個檔案裡；帖數送到後端，後端只回傳「建議訂購規格 × 數量」、總個數或「請洽嘉榮」） -->
   <main id="v-calc" hidden>
     <div class="pad stack">
       <p class="help">填入每道藥膳要包的帖數，試算建議訂購的藥材規格。現成藥膳包請返回選購。</p>
@@ -309,7 +349,7 @@ details.rule[open] summary{text-decoration:none}
       <section class="card" id="calcOut" hidden>
         <h2>建議訂購量</h2>
         <p class="help" id="calcMeta"></p>
-        <details class="rule"><summary>建議量怎麼算</summary>依各道藥膳的帖數，把相同藥材合計後，向上取到可以訂的規格：四兩、半斤這類小規格一次訂 1 份；超過一斤就訂整斤，最多 10 斤。這裡只列建議訂購的規格與數量；金額一樣在報價時確認。</details>
+        <details class="rule"><summary>建議量怎麼算</summary>依各道藥膳的帖數，把相同藥材合計後，向上取到可以訂的規格：四兩、半斤這類小規格一次訂 1 份；超過 1斤就訂整斤，最多 10斤。以顆、片計的藥材先換算成重量；換算是約略值的會標「約」。這裡只列建議訂購的規格與數量；金額一樣在報價時確認。</details>
         <div id="calcLines"></div>
       </section>
       <div class="tipbox" id="calcNote" role="status" hidden></div>
@@ -321,7 +361,8 @@ details.rule[open] summary{text-decoration:none}
   <!-- 訂購清單／送出（同一頁完成，不另設確認頁） -->
   <main id="v-cart" hidden>
     <div class="pad stack">
-      <section class="card"><h2 id="cartHead">已選 0 項</h2><div id="lines"></div></section>
+      <section class="card"><h2 id="cartHead">已選 0 項</h2><p id="mtoCartLead" class="mto-info" hidden></p>
+        <div id="lines"></div></section>
 
       <form id="form" novalidate class="stack">
         <section class="card">
@@ -426,7 +467,7 @@ details.rule[open] summary{text-decoration:none}
 <!-- 全部分類 -->
 <div class="ov" id="catSheet" hidden><div class="panel" role="dialog" aria-modal="true" aria-labelledby="catSheetTitle">
   <div class="ptop"><h2 id="catSheetTitle">全部分類</h2><button class="pclose" type="button" data-close>關閉</button></div>
-  <div class="pbody"><div class="catgrid" id="catGrid"></div></div>
+  <div class="pbody" id="catGrid"></div>
 </div></div>
 <!-- 品項詳情 -->
 <div class="ov" id="detail" hidden><div class="panel" id="detailPanel" role="dialog" aria-modal="true" aria-labelledby="detailName">
@@ -451,15 +492,15 @@ const SHOP_NAME = '永聖中藥房';
 const IMG_DIR = 'images/';
 const STORE_KEY = 'pharmacyOrderV3';       /* 購物車與收件資料 */
 const LAST_KEY = 'pharmacyLastOrderV3';    /* 最近一張訂單（用來「記住這台裝置」） */
-const CATALOG_KEY = 'pharmacyCatalogV4';   /* 從試算表「品項」分頁抓回來的品項清單 */
+const CATALOG_KEY = 'pharmacyCatalogV6';   /* r5 品項快取含接單製作標記 */
 
 /* ================= 品項（不含任何金額、份量或配比） =================
    這份清單是「內建備份」。設定了 APPS_SCRIPT_URL 之後，頁面會改用試算表「品項」分頁的內容，
    所以之後新增或修改品項，只要改試算表（並放照片 images/代碼.jpg），不必改這個檔案。
    欄位：cat 分類、code 代碼、name 品名、specs 可選規格、unit 單位、note 說明、alias 隱藏的搜尋別名、off 暫不開放、
          ask 洽詢品項（沒有固定規格也可以加入清單）、pending 待報價（只是標記，不是金額）
-   r2 新增：cat2 副分類（也出現在這個大分類，不複製代碼）、sub 小類（在自己的大分類裡的小組）、
-           ing 成分（品項彈窗列的藥材名稱，用「、」分開；只有名稱） */
+   sub 小類（在自己的大分類裡的小組）、ing 成分（品項彈窗列的藥材名稱，用「、」分開；只有名稱）
+   r4：also 也屬於（陣列：這個品項還要出現在哪些大分類。同一個代碼、不複製；清單依代碼合併）。規格寫「1斤」。 */
 let ITEMS = [
  {"cat":"御膳方藥膳包","code":"G01","name":"絳雪四物方","specs":["1 包"],"unit":"包","note":"四物・125 g","ing":"當歸、芍藥、熟地、川芎、剪天水黨蔘、炙甘草、晉耆、枸杞、黑棗、玉竹、肉桂碎、桂枝"},
  {"cat":"御膳方藥膳包","code":"G02","name":"八珍太極引","specs":["1 包"],"unit":"包","note":"八珍・145 g","ing":"當歸、芍藥、熟地、川芎、剪天水黨蔘、炒白朮、捲茯苓、炙甘草、晉耆、枸杞、黑棗、玉竹、肉桂碎、桂枝"},
@@ -480,8 +521,8 @@ let ITEMS = [
  {"cat":"御膳方藥膳包","code":"G17","name":"萬象滷韻集","specs":["1 包"],"unit":"包","note":"滷包・60 g","ing":"生甘草、大紅袍花椒、肉桂碎、桂枝、大茴香、小茴香、丁香、山奈、陳皮、月桂葉"},
  {"cat":"御膳方藥膳包","code":"G18","name":"牛肉滷包","specs":["1 包"],"unit":"包","note":"牛滷・規格依包裝","ing":"生甘草、大紅袍花椒、肉桂碎、桂枝、桂蒂、大茴香、小茴香、肉豆蔻、白豆蔻、山奈、草果"},
  {"cat":"御膳方藥膳包","code":"G19","name":"麻辣鍋湯底滷包","specs":["1 包"],"unit":"包","note":"麻辣鍋・規格依包裝","ing":"生甘草、白胡椒粒、大紅袍花椒、青花椒、肉桂碎、大茴香、小茴香、丁香、白豆蔻、草果、陳皮、香葉、白芷、香茅、高良薑、蓽茇"},
- {"cat":"御膳方藥膳包","code":"G20","name":"當歸黃耆燉魚湯","specs":["1 包"],"unit":"包","note":"","alias":"燉魚 魚湯","ing":"當歸、川芎、剪天水黨蔘、晉耆、枸杞、黑棗、桂枝、桂蒂"},
- {"cat":"御膳方藥膳包","code":"G21","name":"當歸鴨","specs":["1 包"],"unit":"包","note":"","alias":"當歸鴨","ing":"當歸、熟地、川芎、剪天水黨蔘、晉耆、枸杞、紅棗、玉竹、肉桂碎、桂枝、白芷"},
+ {"cat":"御膳方藥膳包","code":"G20","name":"當歸黃耆燉魚湯","specs":["1 包"],"unit":"包","alias":"燉魚 魚湯","ing":"當歸、川芎、剪天水黨蔘、晉耆、枸杞、黑棗、桂枝、桂蒂"},
+ {"cat":"御膳方藥膳包","code":"G21","name":"當歸鴨","specs":["1 包"],"unit":"包","alias":"當歸鴨","ing":"當歸、熟地、川芎、剪天水黨蔘、晉耆、枸杞、紅棗、玉竹、肉桂碎、桂枝、白芷"},
  {"cat":"御膳方藥膳包","code":"G22","name":"韓式人參雞湯","specs":["1 包（小顆鮮人參）","1 包（大顆鮮人參）"],"unit":"包","note":"附鮮人參 1 株：小顆約 100–120 g、大顆約 160–170 g・一包 4–5 人份","alias":"人參雞 參雞湯 鮮人參","ing":"當歸尾、川芎、晉耆、枸杞、紅棗、玉竹、狗尾草、洋薏仁、白胡椒粒、肉桂碎、桂枝、鮮人參"},
  {"cat":"拾貳盞茶飲","code":"T01","name":"拾貳盞｜躺","specs":["1 盒"],"unit":"盒","note":"春之一・薰衣草 × 小麥 × 台灣杭菊・每盒 10 入"},
  {"cat":"拾貳盞茶飲","code":"T02","name":"拾貳盞｜美","specs":["1 盒"],"unit":"盒","note":"春之二・玫瑰花 × 薄荷 × 台灣杭菊・每盒 10 入"},
@@ -529,124 +570,136 @@ let ITEMS = [
  {"cat":"零嘴","code":"N04","name":"化核李","specs":["120 g","600 g"],"unit":"份","note":"酸酸甜甜・彰化員林百果山特產"},
  {"cat":"零嘴","code":"N05","name":"甘草橄欖","specs":["150 g","600 g"],"unit":"份","note":"彰化員林百果山特產"},
  {"cat":"零嘴","code":"N06","name":"化核橄欖","specs":["120 g","600 g"],"unit":"份","note":"彰化員林百果山特產"},
- {"cat":"零嘴","code":"N07","name":"仙楂餅","specs":["一斤"],"unit":"斤","note":"以斤計・幫助消化"},
- {"cat":"零嘴","code":"N08","name":"仙楂丸","specs":["一斤"],"unit":"斤","note":"以斤計・幫助消化"},
- {"cat":"足浴・外用","code":"X01","name":"木｜青木·春和","specs":["1 袋"],"unit":"袋","note":"五行草本泡足・每袋 6 小包、每小包 20 g・清新草本 × 溫潤木質香・僅供外用；足部有傷口、皮膚炎或感染時請勿使用；特殊族群使用前請先諮詢藥師或醫療專業人員","alias":"疲疲除 足浴包 泡腳 泡足 五行草本泡足"},
- {"cat":"足浴・外用","code":"X02","name":"水｜玄水·冬靜","specs":["1 袋"],"unit":"袋","note":"五行草本泡足・每袋 6 小包、每小包 20 g・淡雅花香 × 柔和草本・僅供外用；足部有傷口、皮膚炎或感染時請勿使用；特殊族群使用前請先諮詢藥師或醫療專業人員","alias":"好好眠 足浴包 泡腳 泡足 五行草本泡足"},
- {"cat":"足浴・外用","code":"X03","name":"火｜丹火·夏煦","specs":["1 袋"],"unit":"袋","note":"五行草本泡足・每袋 6 小包、每小包 20 g・濃郁草本 × 溫暖辛香・僅供外用；足部有傷口、皮膚炎或感染時請勿使用；特殊族群使用前請先諮詢藥師或醫療專業人員","alias":"暖暖宮 足浴包 泡腳 泡足 五行草本泡足"},
- {"cat":"足浴・外用","code":"X04","name":"金｜白金·秋清","specs":["1 袋"],"unit":"袋","note":"五行草本泡足・每袋 6 小包、每小包 20 g・清爽氣息 × 純淨草本・僅供外用；足部有傷口、皮膚炎或感染時請勿使用；特殊族群使用前請先諮詢藥師或醫療專業人員","alias":"臭腳燒 足浴包 泡腳 泡足 五行草本泡足"},
- {"cat":"足浴・外用","code":"X05","name":"土｜黃土·長夏","specs":["1 袋"],"unit":"袋","note":"五行草本泡足・每袋 6 小包、每小包 20 g・柑橘辛香 × 沉穩草本・僅供外用；足部有傷口、皮膚炎或感染時請勿使用；特殊族群使用前請先諮詢藥師或醫療專業人員","alias":"水水消 足浴包 泡腳 泡足 五行草本泡足"},
- {"cat":"足浴・外用","code":"X06","name":"蚊香包","specs":["1 包"],"unit":"包","note":"35 g・香茅、薄荷、丁香等","cat2":"蚊香包材料"},
+ {"cat":"零嘴","code":"N07","name":"仙楂餅","specs":["1斤"],"unit":"斤","note":"以斤計・幫助消化"},
+ {"cat":"零嘴","code":"N08","name":"仙楂丸","specs":["1斤"],"unit":"斤","note":"以斤計・幫助消化"},
+ {"cat":"足浴・外用","code":"X01","name":"木｜青木·春和","specs":["1 袋"],"unit":"袋","note":"五行草本泡足・每袋 6 小包、每小包 20 g・清新草本 × 溫潤木質香・僅供外用；足部有傷口、皮膚炎或感染時請勿使用；特殊族群使用前請先諮詢藥師或醫療專業人員","alias":"疲疲除 足浴包 泡腳 泡足 五行草本泡足","ing":"伸筋草、澤蘭、艾葉、紅花、芙蓉葉、桂枝、乾薑"},
+ {"cat":"足浴・外用","code":"X02","name":"水｜玄水·冬靜","specs":["1 袋"],"unit":"袋","note":"五行草本泡足・每袋 6 小包、每小包 20 g・淡雅花香 × 柔和草本・僅供外用；足部有傷口、皮膚炎或感染時請勿使用；特殊族群使用前請先諮詢藥師或醫療專業人員","alias":"好好眠 足浴包 泡腳 泡足 五行草本泡足","ing":"薰衣草、陳皮、青皮、艾葉、夜交藤、合歡皮"},
+ {"cat":"足浴・外用","code":"X03","name":"火｜丹火·夏煦","specs":["1 袋"],"unit":"袋","note":"五行草本泡足・每袋 6 小包、每小包 20 g・濃郁草本 × 溫暖辛香・僅供外用；足部有傷口、皮膚炎或感染時請勿使用；特殊族群使用前請先諮詢藥師或醫療專業人員","alias":"暖暖宮 足浴包 泡腳 泡足 五行草本泡足","ing":"益母草、雞血藤、丹參、紅花、乾薑、當歸尾"},
+ {"cat":"足浴・外用","code":"X04","name":"金｜白金·秋清","specs":["1 袋"],"unit":"袋","note":"五行草本泡足・每袋 6 小包、每小包 20 g・清爽氣息 × 純淨草本・僅供外用；足部有傷口、皮膚炎或感染時請勿使用；特殊族群使用前請先諮詢藥師或醫療專業人員","alias":"臭腳燒 足浴包 泡腳 泡足 五行草本泡足","ing":"明礬、葛根、艾葉、黃柏、青鹽、苦參、蛇床子、白鮮皮、五倍子"},
+ {"cat":"足浴・外用","code":"X05","name":"土｜黃土·長夏","specs":["1 袋"],"unit":"袋","note":"五行草本泡足・每袋 6 小包、每小包 20 g・柑橘辛香 × 沉穩草本・僅供外用；足部有傷口、皮膚炎或感染時請勿使用；特殊族群使用前請先諮詢藥師或醫療專業人員","alias":"水水消 足浴包 泡腳 泡足 五行草本泡足","ing":"艾葉、桂枝、陳皮、花椒、乾薑、黃耆"},
+ {"cat":"足浴・外用","code":"X06","name":"蚊香包","specs":["1 包"],"unit":"包","note":"35 g・香茅、薄荷、丁香等","also":["蚊香包材料"]},
  {"cat":"足浴・外用","code":"X07","name":"白澤淨身包","specs":["1 包"],"unit":"包","note":"艾草、香茅、芙蓉葉、菖蒲、柳枝癀、月桃根、檀香"},
- {"cat":"足浴・外用","code":"X08","name":"蚊香料（外用）","specs":["一斤"],"unit":"斤","note":"外用，不可內服","alias":"蚊香 驅蚊 防蚊 香包","cat2":"蚊香包材料","ing":"丁香、艾葉、白芷、石菖蒲、薄荷、藿香、紫蘇、金銀花、陳皮、肉桂、香茅"},
- {"cat":"四物類","code":"H01","name":"精選級當歸片","specs":["半斤","一斤"],"unit":"斤","note":"2 指歸"},
- {"cat":"四物類","code":"H02","name":"當歸尾","specs":["半斤","一斤"],"unit":"斤","note":""},
- {"cat":"四物類","code":"H03","name":"特級炒白芍","specs":["半斤","一斤"],"unit":"斤","note":""},
- {"cat":"四物類","code":"H04","name":"台切生地片","specs":["半斤","一斤"],"unit":"斤","note":""},
- {"cat":"四物類","code":"H05","name":"台切熟地片","specs":["半斤","一斤"],"unit":"斤","note":""},
- {"cat":"四物類","code":"H06","name":"酒製川芎片","specs":["半斤","一斤"],"unit":"斤","note":""},
- {"cat":"四物類","code":"H07","name":"原味川芎片","specs":["半斤","一斤"],"unit":"斤","note":""},
- {"cat":"參類","code":"H08","name":"剪天水黨蔘","specs":["半斤","一斤"],"unit":"斤","note":""},
+ {"cat":"足浴・外用","code":"X08","name":"蚊香料（外用）","specs":["1斤"],"unit":"斤","note":"外用，不可內服","alias":"蚊香 驅蚊 防蚊 香包","also":["蚊香包材料"],"ing":"丁香、艾葉、白芷、石菖蒲、薄荷、藿香、紫蘇、金銀花、陳皮、肉桂、香茅"},
+ {"cat":"四物類","code":"H01","name":"精選級當歸片","specs":["半斤","1斤"],"unit":"斤","note":"2 指歸"},
+ {"cat":"四物類","code":"H02","name":"當歸尾","specs":["半斤","1斤"],"unit":"斤"},
+ {"cat":"四物類","code":"H03","name":"特級炒白芍","specs":["半斤","1斤"],"unit":"斤"},
+ {"cat":"四物類","code":"H04","name":"台切生地片","specs":["半斤","1斤"],"unit":"斤"},
+ {"cat":"四物類","code":"H05","name":"台切熟地片","specs":["半斤","1斤"],"unit":"斤"},
+ {"cat":"四物類","code":"H06","name":"酒製川芎片","specs":["半斤","1斤"],"unit":"斤"},
+ {"cat":"四物類","code":"H07","name":"原味川芎片","specs":["半斤","1斤"],"unit":"斤"},
+ {"cat":"參類","code":"H08","name":"剪天水黨蔘","specs":["半斤","1斤"],"unit":"斤"},
  {"cat":"參類","code":"H09","name":"正官庄野山參片（良）","specs":["1 錢","2 錢","3 錢","4 錢","5 錢"],"unit":"錢","note":"規格 20 良，以錢計（1 錢 = 3.75 g）"},
- {"cat":"參類","code":"H10","name":"4A大陸紅參","specs":["四兩","半斤","一斤"],"unit":"斤","note":"石柱參 26–28 片／兩"},
- {"cat":"參類","code":"H11","name":"5A大陸紅參","specs":["四兩","半斤","一斤"],"unit":"斤","note":"石柱參 18–20 片／兩"},
- {"cat":"參類","code":"H12","name":"5A大陸東洋參","specs":["四兩","半斤","一斤"],"unit":"斤","note":""},
- {"cat":"參類","code":"H13","name":"手切西洋參","specs":["四兩","半斤","一斤"],"unit":"斤","note":""},
- {"cat":"參類","code":"H34","name":"吉林蔘鬚","specs":["四兩","半斤","一斤"],"unit":"斤","note":""},
- {"cat":"補氣類","code":"H14","name":"麩炒白朮","specs":["四兩","半斤","一斤"],"unit":"斤","note":""},
- {"cat":"補氣類","code":"H15","name":"紅土炒白朮","specs":["四兩","半斤","一斤"],"unit":"斤","note":""},
- {"cat":"補氣類","code":"H16","name":"捲茯苓","specs":["四兩","半斤","一斤"],"unit":"斤","note":""},
- {"cat":"補氣類","code":"H17","name":"生甘草","specs":["四兩","半斤","一斤"],"unit":"斤","note":""},
- {"cat":"補氣類","code":"H19","name":"炙甘草","specs":["四兩","半斤","一斤"],"unit":"斤","note":""},
- {"cat":"補氣類","code":"H22","name":"4A晉耆","specs":["半斤","一斤"],"unit":"斤","note":""},
- {"cat":"補氣類","code":"H23","name":"2A晉耆","specs":["半斤","一斤"],"unit":"斤","note":""},
- {"cat":"棗・枸杞","code":"H24","name":"枸杞","specs":["一斤"],"unit":"斤","note":"150 顆／兩・茶包用的 220 顆／兩規格請在備註註明"},
- {"cat":"棗・枸杞","code":"H25","name":"枸杞王","specs":["一斤"],"unit":"斤","note":"30 顆／兩"},
- {"cat":"棗・枸杞","code":"H26","name":"圓黑棗","specs":["一斤"],"unit":"斤","note":"口感較甜"},
- {"cat":"棗・枸杞","code":"H27","name":"長黑棗","specs":["一斤"],"unit":"斤","note":"口感帶微酸"},
- {"cat":"棗・枸杞","code":"H28","name":"大紅棗","specs":["一斤"],"unit":"斤","note":"8–10 顆／兩"},
- {"cat":"棗・枸杞","code":"H29","name":"中紅棗","specs":["一斤"],"unit":"斤","note":"14–16 顆／兩"},
- {"cat":"滋補藥材","code":"H30","name":"玉竹","specs":["半斤","一斤"],"unit":"斤","note":""},
- {"cat":"滋補藥材","code":"H31","name":"炒青仁黑豆","specs":["半斤","一斤"],"unit":"斤","note":""},
- {"cat":"滋補藥材","code":"H32","name":"製何首烏","specs":["四兩","半斤","一斤"],"unit":"斤","note":""},
- {"cat":"滋補藥材","code":"H50","name":"黃精","specs":["四兩","半斤","一斤"],"unit":"斤","note":""},
- {"cat":"滋補藥材","code":"H51","name":"狗尾草","specs":["半斤","一斤"],"unit":"斤","note":""},
- {"cat":"滋補藥材","code":"H52","name":"天麻","specs":["四兩","半斤","一斤"],"unit":"斤","note":""},
- {"cat":"滋補藥材","code":"H53","name":"黃金蟲草","specs":["四兩","半斤","一斤"],"unit":"斤","note":""},
- {"cat":"滋補藥材","code":"H54","name":"麥冬","specs":["四兩","半斤","一斤"],"unit":"斤","note":""},
- {"cat":"滋補藥材","code":"H55","name":"天冬","specs":["四兩","半斤","一斤"],"unit":"斤","note":""},
- {"cat":"滋補藥材","code":"H56","name":"百合","specs":["四兩","半斤","一斤"],"unit":"斤","note":""},
- {"cat":"滋補藥材","code":"H57","name":"沙參","specs":["四兩","半斤","一斤"],"unit":"斤","note":""},
- {"cat":"滋補藥材","code":"H58","name":"雞血藤","specs":["四兩","半斤","一斤"],"unit":"斤","note":""},
- {"cat":"滋補藥材","code":"H59","name":"牛乳埔","specs":["四兩","半斤","一斤"],"unit":"斤","note":""},
- {"cat":"四神食材","code":"H36","name":"建蓮子","specs":["半斤","一斤"],"unit":"斤","note":""},
- {"cat":"四神食材","code":"H37","name":"紡蓮子","specs":["半斤","一斤"],"unit":"斤","note":""},
- {"cat":"四神食材","code":"H38","name":"芡實","specs":["半斤","一斤"],"unit":"斤","note":""},
- {"cat":"四神食材","code":"H39","name":"蘇淮山","specs":["半斤","一斤"],"unit":"斤","note":""},
- {"cat":"四神食材","code":"H40","name":"薏仁","specs":["半斤","一斤"],"unit":"斤","note":""},
- {"cat":"四神食材","code":"H41","name":"脫水淮山","specs":["半斤","一斤"],"unit":"斤","note":""},
- {"cat":"四神食材","code":"H42","name":"大麥(洋薏仁)","specs":["一斤"],"unit":"斤","note":""},
- {"cat":"辛香料","code":"H43","name":"白胡椒粒","specs":["四兩","半斤","一斤"],"unit":"斤","note":"","sub":"胡椒・花椒"},
- {"cat":"辛香料","code":"H33","name":"花椒","specs":["四兩","半斤","一斤"],"unit":"斤","note":"","sub":"胡椒・花椒"},
- {"cat":"辛香料","code":"H35","name":"大紅袍花椒","specs":["四兩","半斤","一斤"],"unit":"斤","note":"","sub":"胡椒・花椒"},
- {"cat":"辛香料","code":"H84","name":"黑胡椒粒","specs":[],"unit":"待確認","note":"","sub":"胡椒・花椒","off":true},
- {"cat":"辛香料","code":"H85","name":"青花椒","specs":[],"unit":"待確認","note":"","sub":"胡椒・花椒","off":true},
- {"cat":"辛香料","code":"H18","name":"肉桂片","specs":["四兩","半斤"],"unit":"斤","note":"","sub":"桂類"},
- {"cat":"辛香料","code":"H60","name":"肉桂碎","specs":["四兩","半斤","一斤"],"unit":"斤","note":"","cat2":"蚊香包材料","sub":"桂類"},
- {"cat":"辛香料","code":"H73","name":"肉桂棒","specs":["一斤"],"unit":"斤","note":"","sub":"桂類"},
- {"cat":"辛香料","code":"H20","name":"桂枝","specs":["一斤"],"unit":"斤","note":"","sub":"桂類"},
- {"cat":"辛香料","code":"H21","name":"桂蒂","specs":["一斤"],"unit":"斤","note":"","sub":"桂類"},
- {"cat":"辛香料","code":"H44","name":"八角茴香","specs":["半斤","一斤"],"unit":"斤","note":"","sub":"八角・茴香・丁香"},
- {"cat":"辛香料","code":"H45","name":"小茴香","specs":["四兩","半斤","一斤"],"unit":"斤","note":"","sub":"八角・茴香・丁香"},
- {"cat":"辛香料","code":"H49","name":"丁香","specs":["二兩","四兩","半斤","一斤"],"unit":"斤","note":"","cat2":"蚊香包材料","sub":"八角・茴香・丁香"},
- {"cat":"辛香料","code":"H62","name":"肉豆蔻","specs":["四兩","半斤","一斤"],"unit":"斤","note":"","sub":"荳蔻・薑類"},
- {"cat":"辛香料","code":"H63","name":"白荳蔻","specs":["四兩","半斤","一斤"],"unit":"斤","note":"","sub":"荳蔻・薑類"},
- {"cat":"辛香料","code":"H46","name":"三柰","specs":["四兩","半斤","一斤"],"unit":"斤","note":"","sub":"荳蔻・薑類"},
- {"cat":"辛香料","code":"H61","name":"乾薑","specs":["四兩","半斤","一斤"],"unit":"斤","note":"","sub":"荳蔻・薑類"},
- {"cat":"辛香料","code":"H83","name":"草果","specs":[],"unit":"待確認","note":"","alias":"草菓","sub":"荳蔻・薑類","off":true},
- {"cat":"辛香料","code":"H48","name":"四製陳皮","specs":["四兩","半斤","一斤"],"unit":"斤","note":"","cat2":"蚊香包材料","sub":"皮・葉・根"},
- {"cat":"辛香料","code":"H77","name":"月桂葉","specs":["半斤","一斤"],"unit":"斤","note":"","sub":"皮・葉・根"},
- {"cat":"辛香料","code":"H47","name":"白芷","specs":["四兩","半斤","一斤"],"unit":"斤","note":"","cat2":"蚊香包材料","sub":"皮・葉・根"},
- {"cat":"辛香料","code":"H71","name":"玫瑰花","specs":["一斤"],"unit":"斤","note":""},
- {"cat":"辛香料","code":"H72","name":"迷迭香","specs":["一斤"],"unit":"斤","note":""},
- {"cat":"辛香料","code":"H81","name":"薄荷全葉","specs":["一斤"],"unit":"斤","note":"全葉，與「薄荷」是不同品項"},
- {"cat":"蚊香包材料","code":"H69","name":"艾葉","specs":["一斤"],"unit":"斤","note":""},
- {"cat":"蚊香包材料","code":"H82","name":"石菖蒲","specs":["一斤"],"unit":"斤","note":"","alias":"菖蒲"},
- {"cat":"蚊香包材料","code":"H65","name":"薄荷","specs":["一斤"],"unit":"斤","note":""},
- {"cat":"蚊香包材料","code":"H66","name":"藿香","specs":["一斤"],"unit":"斤","note":""},
- {"cat":"蚊香包材料","code":"H64","name":"紫蘇","specs":["一斤"],"unit":"斤","note":""},
- {"cat":"蚊香包材料","code":"H68","name":"金銀花","specs":["一斤"],"unit":"斤","note":""},
- {"cat":"蚊香包材料","code":"H67","name":"香茅","specs":["一斤"],"unit":"斤","note":""},
- {"cat":"蚊香包材料","code":"H70","name":"薰衣草","specs":["一斤"],"unit":"斤","note":"蚊香包選配（有人會加）"},
- {"cat":"果茶類","code":"H74","name":"洛神花","specs":["一斤"],"unit":"斤","note":""},
- {"cat":"果茶類","code":"H75","name":"山楂","specs":["一斤"],"unit":"斤","note":""},
- {"cat":"果茶類","code":"H76","name":"無花果片","specs":["一斤"],"unit":"斤","note":"也可用作熱紅酒包原料"},
- {"cat":"果茶類","code":"H78","name":"蘋果片","specs":["四兩","一斤"],"unit":"斤","note":""},
- {"cat":"果茶類","code":"H79","name":"柳橙片","specs":["四兩","一斤"],"unit":"斤","note":""},
+ {"cat":"參類","code":"H10","name":"4A大陸紅參","specs":["四兩","半斤","1斤"],"unit":"斤","note":"石柱參 26–28 片／兩"},
+ {"cat":"參類","code":"H11","name":"5A大陸紅參","specs":["四兩","半斤","1斤"],"unit":"斤","note":"石柱參 18–20 片／兩"},
+ {"cat":"參類","code":"H12","name":"5A大陸東洋參","specs":["四兩","半斤","1斤"],"unit":"斤"},
+ {"cat":"參類","code":"H13","name":"手切西洋參","specs":["四兩","半斤","1斤"],"unit":"斤"},
+ {"cat":"參類","code":"H34","name":"吉林蔘鬚","specs":["四兩","半斤","1斤"],"unit":"斤"},
+ {"cat":"補氣類","code":"H14","name":"麩炒白朮","specs":["四兩","半斤","1斤"],"unit":"斤"},
+ {"cat":"補氣類","code":"H15","name":"紅土炒白朮","specs":["四兩","半斤","1斤"],"unit":"斤"},
+ {"cat":"補氣類","code":"H16","name":"捲茯苓","specs":["四兩","半斤","1斤"],"unit":"斤"},
+ {"cat":"補氣類","code":"H17","name":"生甘草","specs":["四兩","半斤","1斤"],"unit":"斤","also":["熱紅酒包"]},
+ {"cat":"補氣類","code":"H19","name":"炙甘草","specs":["四兩","半斤","1斤"],"unit":"斤"},
+ {"cat":"補氣類","code":"H22","name":"4A晉耆","specs":["半斤","1斤"],"unit":"斤"},
+ {"cat":"補氣類","code":"H23","name":"2A晉耆","specs":["半斤","1斤"],"unit":"斤"},
+ {"cat":"棗・枸杞","code":"H24","name":"枸杞","specs":["1斤"],"unit":"斤","note":"150 顆／兩・茶包用的 220 顆／兩規格請在備註註明"},
+ {"cat":"棗・枸杞","code":"H25","name":"枸杞王","specs":["1斤"],"unit":"斤","note":"30 顆／兩"},
+ {"cat":"棗・枸杞","code":"H26","name":"圓黑棗","specs":["1斤"],"unit":"斤","note":"口感較甜"},
+ {"cat":"棗・枸杞","code":"H27","name":"長黑棗","specs":["1斤"],"unit":"斤","note":"口感帶微酸"},
+ {"cat":"棗・枸杞","code":"H28","name":"大紅棗","specs":["1斤"],"unit":"斤","note":"8–10 顆／兩"},
+ {"cat":"棗・枸杞","code":"H29","name":"中紅棗","specs":["1斤"],"unit":"斤","note":"14–16 顆／兩"},
+ {"cat":"滋補藥材","code":"H30","name":"玉竹","specs":["半斤","1斤"],"unit":"斤"},
+ {"cat":"滋補藥材","code":"H31","name":"炒青仁黑豆","specs":["半斤","1斤"],"unit":"斤"},
+ {"cat":"滋補藥材","code":"H32","name":"製何首烏","specs":["四兩","半斤","1斤"],"unit":"斤"},
+ {"cat":"滋補藥材","code":"H50","name":"黃精","specs":["四兩","半斤","1斤"],"unit":"斤"},
+ {"cat":"滋補藥材","code":"H51","name":"狗尾草","specs":["半斤","1斤"],"unit":"斤"},
+ {"cat":"滋補藥材","code":"H52","name":"天麻","specs":["四兩","半斤","1斤"],"unit":"斤"},
+ {"cat":"滋補藥材","code":"H53","name":"黃金蟲草","specs":["四兩","半斤","1斤"],"unit":"斤"},
+ {"cat":"滋補藥材","code":"H54","name":"麥冬","specs":["四兩","半斤","1斤"],"unit":"斤"},
+ {"cat":"滋補藥材","code":"H55","name":"天冬","specs":["四兩","半斤","1斤"],"unit":"斤"},
+ {"cat":"滋補藥材","code":"H56","name":"百合","specs":["四兩","半斤","1斤"],"unit":"斤"},
+ {"cat":"滋補藥材","code":"H57","name":"沙參","specs":["四兩","半斤","1斤"],"unit":"斤"},
+ {"cat":"滋補藥材","code":"H58","name":"雞血藤","specs":["四兩","半斤","1斤"],"unit":"斤"},
+ {"cat":"滋補藥材","code":"H59","name":"牛乳埔","specs":["四兩","半斤","1斤"],"unit":"斤"},
+ {"cat":"四神食材","code":"H36","name":"建蓮子","specs":["半斤","1斤"],"unit":"斤"},
+ {"cat":"四神食材","code":"H37","name":"紡蓮子","specs":["半斤","1斤"],"unit":"斤"},
+ {"cat":"四神食材","code":"H38","name":"芡實","specs":["半斤","1斤"],"unit":"斤"},
+ {"cat":"四神食材","code":"H39","name":"蘇淮山","specs":["半斤","1斤"],"unit":"斤"},
+ {"cat":"四神食材","code":"H40","name":"薏仁","specs":["半斤","1斤"],"unit":"斤"},
+ {"cat":"四神食材","code":"H41","name":"脫水淮山","specs":["半斤","1斤"],"unit":"斤"},
+ {"cat":"四神食材","code":"H42","name":"大麥(洋薏仁)","specs":["1斤"],"unit":"斤"},
+ {"cat":"辛香料","code":"H43","name":"白胡椒粒","specs":["四兩","半斤","1斤"],"unit":"斤","sub":"胡椒・花椒"},
+ {"cat":"辛香料","code":"H33","name":"花椒","specs":["四兩","半斤","1斤"],"unit":"斤","sub":"胡椒・花椒"},
+ {"cat":"辛香料","code":"H35","name":"大紅袍花椒","specs":["四兩","半斤","1斤"],"unit":"斤","sub":"胡椒・花椒"},
+ {"cat":"辛香料","code":"H84","name":"黑胡椒粒","specs":["四兩","半斤","1斤"],"unit":"斤","sub":"胡椒・花椒"},
+ {"cat":"辛香料","code":"H85","name":"青花椒","specs":["四兩","半斤","1斤"],"unit":"斤","sub":"胡椒・花椒"},
+ {"cat":"辛香料","code":"H18","name":"肉桂片","specs":["四兩","半斤"],"unit":"斤","sub":"桂類"},
+ {"cat":"辛香料","code":"H60","name":"肉桂碎","specs":["四兩","半斤","1斤"],"unit":"斤","also":["蚊香包材料"],"sub":"桂類"},
+ {"cat":"辛香料","code":"H73","name":"肉桂棒","specs":["1斤"],"unit":"斤","also":["熱紅酒包"],"sub":"桂類"},
+ {"cat":"辛香料","code":"H20","name":"桂枝","specs":["1斤"],"unit":"斤","sub":"桂類"},
+ {"cat":"辛香料","code":"H21","name":"桂蒂","specs":["1斤"],"unit":"斤","sub":"桂類"},
+ {"cat":"辛香料","code":"H44","name":"八角茴香","specs":["半斤","1斤"],"unit":"斤","also":["熱紅酒包"],"sub":"八角・茴香・丁香"},
+ {"cat":"辛香料","code":"H45","name":"小茴香","specs":["四兩","半斤","1斤"],"unit":"斤","sub":"八角・茴香・丁香"},
+ {"cat":"辛香料","code":"H49","name":"丁香","specs":["二兩","四兩","半斤","1斤"],"unit":"斤","also":["蚊香包材料","熱紅酒包"],"sub":"八角・茴香・丁香"},
+ {"cat":"辛香料","code":"H62","name":"肉豆蔻","specs":["四兩","半斤","1斤"],"unit":"斤","sub":"荳蔻・薑類"},
+ {"cat":"辛香料","code":"H63","name":"白荳蔻","specs":["四兩","半斤","1斤"],"unit":"斤","sub":"荳蔻・薑類"},
+ {"cat":"辛香料","code":"H46","name":"三柰","specs":["四兩","半斤","1斤"],"unit":"斤","sub":"荳蔻・薑類"},
+ {"cat":"辛香料","code":"H61","name":"乾薑","specs":["四兩","半斤","1斤"],"unit":"斤","sub":"荳蔻・薑類"},
+ {"cat":"辛香料","code":"H83","name":"草果","specs":["四兩","半斤","1斤"],"unit":"斤","alias":"草菓","sub":"荳蔻・薑類"},
+ {"cat":"辛香料","code":"H48","name":"四製陳皮","specs":["四兩","半斤","1斤"],"unit":"斤","also":["蚊香包材料"],"sub":"皮・葉・根"},
+ {"cat":"辛香料","code":"H77","name":"月桂葉","specs":["半斤","1斤"],"unit":"斤","also":["熱紅酒包"],"sub":"皮・葉・根"},
+ {"cat":"辛香料","code":"H47","name":"白芷","specs":["四兩","半斤","1斤"],"unit":"斤","also":["蚊香包材料"],"sub":"皮・葉・根"},
+ {"cat":"蚊香包材料","code":"H69","name":"艾葉","specs":["1斤"],"unit":"斤"},
+ {"cat":"蚊香包材料","code":"H82","name":"石菖蒲","specs":["1斤"],"unit":"斤","alias":"菖蒲"},
+ {"cat":"蚊香包材料","code":"H65","name":"薄荷","specs":["1斤"],"unit":"斤"},
+ {"cat":"蚊香包材料","code":"H66","name":"藿香","specs":["1斤"],"unit":"斤"},
+ {"cat":"蚊香包材料","code":"H64","name":"紫蘇","specs":["1斤"],"unit":"斤"},
+ {"cat":"蚊香包材料","code":"H68","name":"金銀花","specs":["1斤"],"unit":"斤"},
+ {"cat":"蚊香包材料","code":"H67","name":"香茅","specs":["1斤"],"unit":"斤"},
+ {"cat":"蚊香包材料","code":"H70","name":"薰衣草","specs":["1斤"],"unit":"斤","note":"蚊香包選配（有人會加）"},
+ {"cat":"熱紅酒包","code":"H71","name":"玫瑰花","specs":["1斤"],"unit":"斤"},
+ {"cat":"熱紅酒包","code":"H72","name":"迷迭香","specs":["1斤"],"unit":"斤","also":["蚊香包材料"]},
+ {"cat":"熱紅酒包","code":"H81","name":"薄荷全葉","specs":["1斤"],"unit":"斤","note":"全葉，與「薄荷」是不同品項"},
+ {"cat":"果茶類","code":"H74","name":"洛神花","specs":["1斤"],"unit":"斤","also":["熱紅酒包"]},
+ {"cat":"果茶類","code":"H75","name":"山楂","specs":["1斤"],"unit":"斤","also":["熱紅酒包"]},
+ {"cat":"果茶類","code":"H76","name":"無花果片","specs":["1斤"],"unit":"斤","note":"也可用作熱紅酒包原料","also":["熱紅酒包"]},
+ {"cat":"果茶類","code":"H78","name":"蘋果片","specs":["四兩","1斤"],"unit":"斤"},
+ {"cat":"果茶類","code":"H79","name":"柳橙片","specs":["四兩","1斤"],"unit":"斤","also":["熱紅酒包"]},
  {"cat":"果茶類","code":"H80","name":"黃金龍眼乾","specs":["1 盒"],"unit":"盒","note":"約 280 g"},
- {"cat":"半成品","code":"P01","name":"洛神花茶（半成品）","specs":["一斤"],"unit":"斤","note":"混和好打成碎片劑"},
- {"cat":"半成品","code":"P02","name":"小心肝茶（半成品）","specs":["一斤"],"unit":"斤","note":"混和好打成碎片劑"},
- {"cat":"半成品","code":"P03","name":"黑豆茶（半成品）","specs":["一斤"],"unit":"斤","note":"混和好打成碎片劑"},
- {"cat":"半成品","code":"P04","name":"菊花晴明茶（半成品）","specs":["一斤"],"unit":"斤","note":"混和好打成碎片劑"},
- {"cat":"包材","code":"B01","name":"小布袋","specs":["1 單位"],"unit":"單位","note":"1 單位＝100 個・不零散賣，只以束（1 單位）販售","cat2":"蚊香包材料"},
- {"cat":"包材","code":"B02","name":"中布袋","specs":["1 單位"],"unit":"單位","note":"1 單位＝100 個・不零散賣，只以束（1 單位）販售","cat2":"蚊香包材料"},
- {"cat":"包材","code":"B03","name":"特大布袋","specs":["1 單位"],"unit":"單位","note":"1 單位＝100 個・不零散賣，只以束（1 單位）販售","cat2":"蚊香包材料"},
- {"cat":"包材","code":"B04","name":"加大布袋","specs":["1 單位"],"unit":"單位","note":"1 單位＝100 個・不零散賣，只以束（1 單位）販售","cat2":"蚊香包材料"},
- {"cat":"包材","code":"B05","name":"大布袋","specs":["1 單位"],"unit":"單位","note":"13.5 × 10.5 cm・1 單位＝100 個・不零散賣，只以束（1 單位）販售","cat2":"蚊香包材料"},
- {"cat":"包材","code":"B06","name":"特加大布袋","specs":["1 單位"],"unit":"單位","note":"21.5 × 16.5 cm・1 單位＝100 個・不零散賣，只以束（1 單位）販售","cat2":"蚊香包材料"},
+ {"cat":"半成品","code":"P01","name":"洛神花茶（半成品）","specs":["1斤"],"unit":"斤","note":"混和好打成碎片劑"},
+ {"cat":"半成品","code":"P02","name":"小心肝茶（半成品）","specs":["1斤"],"unit":"斤","note":"混和好打成碎片劑"},
+ {"cat":"半成品","code":"P03","name":"黑豆茶（半成品）","specs":["1斤"],"unit":"斤","note":"混和好打成碎片劑"},
+ {"cat":"半成品","code":"P04","name":"菊花晴明茶（半成品）","specs":["1斤"],"unit":"斤","note":"混和好打成碎片劑"},
+ {"cat":"包材","code":"B01","name":"小布袋","specs":["1 單位"],"unit":"單位","note":"1 單位＝100 個・不零散賣，只以束（1 單位）販售","also":["蚊香包材料"]},
+ {"cat":"包材","code":"B02","name":"中布袋","specs":["1 單位"],"unit":"單位","note":"1 單位＝100 個・不零散賣，只以束（1 單位）販售","also":["蚊香包材料"]},
+ {"cat":"包材","code":"B03","name":"特大布袋","specs":["1 單位"],"unit":"單位","note":"1 單位＝100 個・不零散賣，只以束（1 單位）販售","also":["蚊香包材料"]},
+ {"cat":"包材","code":"B04","name":"加大布袋","specs":["1 單位"],"unit":"單位","note":"1 單位＝100 個・不零散賣，只以束（1 單位）販售","also":["蚊香包材料"]},
+ {"cat":"包材","code":"B05","name":"大布袋","specs":["1 單位"],"unit":"單位","note":"13.5 × 10.5 cm・1 單位＝100 個・不零散賣，只以束（1 單位）販售","also":["蚊香包材料"]},
+ {"cat":"包材","code":"B06","name":"特加大布袋","specs":["1 單位"],"unit":"單位","note":"21.5 × 16.5 cm・1 單位＝100 個・不零散賣，只以束（1 單位）販售","also":["蚊香包材料"]},
  {"cat":"包材","code":"B07","name":"6兩黃牛皮立袋","specs":["1 單位"],"unit":"單位","note":"15 × 23 cm・1 單位＝10 個"},
  {"cat":"包材","code":"B08","name":"6兩白牛皮立袋","specs":["1 單位"],"unit":"單位","note":"15 × 23 cm・1 單位＝10 個"},
  {"cat":"包材","code":"B09","name":"4兩黃牛皮立袋","specs":["1 單位"],"unit":"單位","note":"12 × 21 cm・1 單位＝10 個"},
  {"cat":"包材","code":"B10","name":"4兩白牛皮立袋","specs":["1 單位"],"unit":"單位","note":"12 × 21 cm・1 單位＝10 個"},
- {"cat":"客製化","code":"J01","name":"客製化藥酒","specs":[],"unit":"","note":"洽詢嘉榮藥師","alias":"藥酒","ask":true},
- {"cat":"客製化","code":"J02","name":"客製化補藥酒","specs":[],"unit":"","note":"洽詢嘉榮藥師","alias":"藥酒 補酒","ask":true},
- {"cat":"客製化","code":"J03","name":"客製化熱紅酒包","specs":[],"unit":"","note":"洽詢嘉榮藥師","alias":"熱紅酒","ask":true}
+ {"cat":"客製化","code":"J01","name":"客製化藥酒","specs":[],"unit":"","note":"洽詢嘉榮藥師","alias":"藥酒","ask":true,"pending":true},
+ {"cat":"客製化","code":"J02","name":"客製化補藥酒","specs":[],"unit":"","note":"洽詢嘉榮藥師","alias":"藥酒 補酒","ask":true,"pending":true},
+ {"cat":"客製化","code":"J03","name":"客製化熱紅酒包","specs":[],"unit":"","note":"洽詢嘉榮藥師","alias":"熱紅酒","ask":true,"pending":true},
+ {"cat":"熱紅酒包","code":"R01","name":"洛神紅酒包","specs":[],"unit":"包","note":"","alias":"","ing":"甘草、肉桂棒、洛神、山楂、月桂葉、八角、丁香、柳橙片","ask":true,"pending":true,"mto":true},
+ {"cat":"熱紅酒包","code":"R02","name":"經典熱紅酒","specs":[],"unit":"包","note":"","alias":"","ing":"月桂葉、肉桂棒、八角、丁香、柳橙片","ask":true,"pending":true,"mto":true},
+ {"cat":"熱紅酒包","code":"R03","name":"無花果熱紅酒包","specs":[],"unit":"包","note":"","alias":"","ing":"月桂葉、肉桂棒、八角、丁香、柳橙片、無花果片","ask":true,"pending":true,"mto":true}
 ];
 
 /* 搜尋別名：品名含左邊的字，就也能用右邊的字搜到 */
 const ALIASES = [['晉耆','黃耆 北耆 黃芪'],['淮山','山藥 懷山'],['蔘鬚','人參鬚 參鬚 人蔘鬚'],['人參鬚','蔘鬚 參鬚'],['黨蔘','黨參'],['西洋參','花旗參 粉光參'],['東洋參','人參 高麗參'],['紅參','人參 紅蔘'],['野山參','人參 山參'],['枸杞','枸杞子 杞子'],['薏仁','薏苡仁 薏米'],['生地','生地黃 地黃'],['熟地','熟地黃 地黃'],['何首烏','首烏'],['麥冬','麥門冬'],['天冬','天門冬'],['三柰','山奈 沙薑 山柰'],['八角','大茴香 八角茴香'],['牛乳埔','牛奶埔 牛乳房'],['狗尾草','通天草'],['黃金蟲草','蟲草花 蟲草'],['沙參','北沙參'],['紅棗','大棗'],['黑棗','烏棗'],['白芍','芍藥'],['白朮','白术'],['芡實','芡米'],['蓮子','蓮實'],['陳皮','橘皮'],['肉桂','桂皮'],['丁香','公丁香'],['花椒','川椒'],['玉竹','葳蕤'],['仙楂','山楂'],['布袋','滷包袋 棉布袋 煎藥袋'],['立袋','夾鏈袋 牛皮紙袋 包裝袋'],['月桂葉','香葉']];
 const CARD_CATS = ['御膳方藥膳包','拾貳盞茶飲'];
-const LIANG = {'二兩':2,'四兩':4,'半斤':8,'一斤':16};
+const JIN = '1斤';                                           /* r4：規格一律寫「1斤」；兩斤以上寫「2斤」「3斤」 */
+const LIANG = {'二兩':2,'四兩':4,'半斤':8,'1斤':16};
+/* 舊寫法「一斤」讀進來一律當成「1斤」：手機裡暫存的清單、舊的品項快取、還沒更新的後端回傳的內容 */
+const normSpec = function(s){ s = String(s); return s === '一斤' || s === '1 斤' || s === '１斤' ? JIN : s; };
+/* 全部分類彈窗的三個分組（只是畫面上的導覽分組；分類名稱、品項資料都照試算表）。沒列在這裡的新分類會排在最後一組 */
+const CAT_GROUPS = [
+  ['現成商品', ['御膳方藥膳包','拾貳盞茶飲','水藥即飲包','單包裝藥材','零嘴','足浴・外用']],
+  ['散裝中藥材', ['四物類','參類','補氣類','棗・枸杞','滋補藥材','四神食材']],
+  ['香料與其他材料', ['辛香料','蚊香包材料','熱紅酒包','果茶類','半成品','包材','客製化']]
+];
 const MAX_JIN = 10, MAX_QTY = 999;
 const SEND_TIMEOUT = 40000, SEND_TRIES = 2;   /* 送單：每次最多等 40 秒；沒有收到後端回答時自動再送一次（同一個識別碼，後端不會重複建單） */
 const ASK_SPEC = '洽詢', PENDING = '待報價', OTHER_SUB = '其他';
@@ -654,21 +707,30 @@ const ASK_SPEC = '洽詢', PENDING = '待報價', OTHER_SUB = '其他';
 const WARN_RE = /外用|內服|請勿|諮詢|警語|僅供|不零散賣/;
 
 const CATS = []; const BY = {};
+let mtoLead = '交期於聯絡時確認';
+const MTO_PROMPT = '請寫希望交期';
+const mtoBadge = it => it.mto ? ' <span class="mto-badge">接單製作</span>' : '';
+const inquiryHTML = it => '請洽' + mtoBadge(it);
 function validCatalog(list){
   return Array.isArray(list) && list.length > 0 && list.every(function(x){
     return x && /^[A-Z]\d{2,3}$/.test(x.code) && typeof x.name === 'string' && x.name && typeof x.cat === 'string' && Array.isArray(x.specs);
   });
 }
 function setItems(list){
-  ITEMS = list.map(function(x){ return {cat:String(x.cat), code:String(x.code), name:String(x.name), specs:x.specs.map(String), unit:String(x.unit || ''), note:String(x.note || ''), alias:String(x.alias || ''), off:!!x.off, ask:!!x.ask, pending:!!x.pending,
-    cat2:String(x.cat2 || ''), sub:String(x.sub || ''), ing:String(x.ing || '')}; });
+  ITEMS = list.map(function(x){
+    const raw = {};                                          /* 後端還在用舊寫法時：送單要照它的寫法送回去（新寫法 → 它的寫法） */
+    const specs = x.specs.map(function(s0){ const s = normSpec(s0); if(s !== String(s0)) raw[s] = String(s0); return s; });
+    /* 也屬於：新版後端給 also（陣列）；舊版後端或舊快取只有 cat2（一個） */
+    const also = (Array.isArray(x.also) ? x.also : x.cat2 ? [x.cat2] : []).map(String).filter(function(c, i, a){ return c && c !== String(x.cat) && a.indexOf(c) === i; });
+    return {cat:String(x.cat), code:String(x.code), name:String(x.name), specs:specs, raw:raw, unit:String(x.unit || ''), note:String(x.note || ''), alias:String(x.alias || ''), off:!!x.off, ask:!!x.ask, pending:!!x.pending, mto:x.mto === true,
+      also:also, sub:String(x.sub || ''), ing:String(x.ing || '')};
+  });
   CATS.length = 0; Object.keys(BY).forEach(function(k){ delete BY[k]; });
   ITEMS.forEach(function(it){
     if(CATS.indexOf(it.cat) < 0) CATS.push(it.cat);
-    if(it.cat2 === it.cat) it.cat2 = '';
     BY[it.code] = it;
     it.weight = it.specs.length > 0 && it.specs.every(function(s){ return LIANG[s] || /錢$/.test(s); });
-    it.multi = it.specs.indexOf('一斤') >= 0;               /* 有「一斤」的品項可訂 2 斤、3 斤… */
+    it.multi = it.specs.indexOf(JIN) >= 0;                  /* 有「1斤」的品項可訂 2斤、3斤… */
     it.askOnly = it.ask && !it.specs.length;                /* 洽詢品項沒有固定規格：規格寫「洽詢」，細節請客人寫備註 */
     it.off = !it.ask && (it.off || it.unit === '待確認' || !it.specs.length);   /* 規格尚未確認，暫不開放 */
     it.pending = it.pending || it.ask;                      /* 待報價：洽詢品項，一樣可以加入清單 */
@@ -676,9 +738,9 @@ function setItems(list){
     it.sp = it.choice ? specInfo(it) : null;                /* 多規格品項：規格鈕上顯示的短名稱與補充說明（只影響顯示） */
     let extra = '';
     ALIASES.forEach(function(a){ if(it.name.indexOf(a[0]) >= 0) extra += ' ' + a[1]; });
-    it.hay = (it.name + ' ' + it.code + ' ' + it.note + ' ' + it.cat + ' ' + it.cat2 + ' ' + it.sub + ' ' + it.alias + extra).toLowerCase();   /* alias 只拿來搜尋，不顯示；成分不放進搜尋 */
+    it.hay = (it.name + ' ' + it.code + ' ' + it.note + ' ' + it.cat + ' ' + it.also.join(' ') + ' ' + it.sub + ' ' + it.alias + extra).toLowerCase();   /* alias 只拿來搜尋，不顯示；成分不放進搜尋 */
   });
-  ITEMS.forEach(function(it){ if(it.cat2 && CATS.indexOf(it.cat2) < 0) CATS.push(it.cat2); });   /* 只有副分類在用的分類也要列出來 */
+  ITEMS.forEach(function(it){ it.also.forEach(function(c){ if(CATS.indexOf(c) < 0) CATS.push(c); }); });   /* 只有「也屬於」在用的分類也要列出來 */
 }
 /* 多規格品項的顯示資訊。只改畫面上的字；資料值、訂單、報價一律用試算表裡的完整規格。
    names：規格鈕上的短名稱
@@ -717,17 +779,20 @@ function pruneCart(){                                        /* 品項清單更�
 async function refreshCatalog(){                             /* 背景向試算表要最新品項；失敗就繼續用現有的 */
   if(!APPS_SCRIPT_URL) return;
   try{
-    const res = await fetch(APPS_SCRIPT_URL + (APPS_SCRIPT_URL.indexOf('?') < 0 ? '?' : '&') + 'action=items', {redirect:'follow'});
+    const res = await fetch(APPS_SCRIPT_URL + (APPS_SCRIPT_URL.indexOf('?') < 0 ? '?' : '&') + 'action=items&v=4', {redirect:'follow'});   /* v=4：要新格式（also、1斤） */
     const data = await res.json();
     if(!data || !data.ok || !validCatalog(data.items)) return;
     const fresh = JSON.stringify(data.items);
     let old = ''; try{ old = localStorage.getItem(CATALOG_KEY) || ''; }catch(e){}
-    if(fresh === old) return;
+    const lead = typeof data.mtoLead === 'string' && data.mtoLead.trim() || '交期於聯絡時確認';
+    if(fresh === old && lead === mtoLead) return;
+    mtoLead = lead;
     try{ localStorage.setItem(CATALOG_KEY, fresh); }catch(e){}
     setItems(data.items); pruneCart(); save();
     if(CATS.indexOf(curCat) < 0) curCat = '全部';
     renderCats();
     if(!$('v-list').hidden){ renderList(); renderBar(); }
+    if(!$('v-cart').hidden) renderLines();
     if(detailCode){ if(BY[detailCode]) renderDetail(); else ovClose(); }
   }catch(e){}
 }
@@ -744,8 +809,8 @@ function load(){
   try{
     const s = JSON.parse(localStorage.getItem(STORE_KEY) || '{}');
     Object.keys(s.cart || {}).forEach(function(code){
-      const it = BY[code], c = s.cart[code];
-      if(it && !it.off && c && specOK(it, c.s) && c.n >= 1) cart[code] = {s:c.s, n:Math.min(Math.floor(c.n), it.weight ? (c.s === '一斤' ? MAX_JIN : 1) : MAX_QTY)};
+      const it = BY[code], c = s.cart[code], sp = c ? normSpec(c.s) : '';   /* 暫存清單裡的「一斤」當成「1斤」 */
+      if(it && !it.off && c && specOK(it, sp) && c.n >= 1 && (!it.mto || Number.isInteger(Number(c.n)))) cart[code] = {s:sp, n:Math.min(Math.floor(c.n), it.weight ? (sp === JIN ? MAX_JIN : 1) : MAX_QTY)};
     });
     FIELDS.forEach(function(k){ if(s.form && s.form[k]) $('i-' + k).value = s.form[k]; });
     if(s.form && s.form.delivery === '其他') $('d-other').checked = true;
@@ -766,7 +831,7 @@ const count = function(){ return Object.keys(cart).length; };
 /* ================= 份量階梯（秤重品項） ================= */
 function ladder(it){
   const L = it.specs.map(function(s){ return {s:s, n:1}; });
-  if(it.multi) for(let n = 2; n <= MAX_JIN; n++) L.push({s:'一斤', n:n});
+  if(it.multi) for(let n = 2; n <= MAX_JIN; n++) L.push({s:JIN, n:n});
   return L;
 }
 function stepWeight(it, dir){
@@ -776,6 +841,7 @@ function stepWeight(it, dir){
   if(i < 0) delete cart[it.code]; else if(i < L.length) cart[it.code] = {s:L[i].s, n:L[i].n};
 }
 function setCount(it, n){
+  if(it.mto && (!Number.isInteger(Number(n)) || Number(n) < 0 || Number(n) > MAX_QTY)) return;
   n = Math.floor(Number(n)); if(!isFinite(n) || n < 0) n = 0; if(n > MAX_QTY) n = MAX_QTY;
   const c = cart[it.code];                                   /* 已經選好的規格要留著（G22 小顆／大顆） */
   if(n === 0) delete cart[it.code]; else cart[it.code] = {s: c ? c.s : (it.askOnly ? ASK_SPEC : it.specs[0]), n:n};
@@ -797,12 +863,18 @@ function noteParts(it){                                      /* 說明拆成「�
   const segs = it.sp && it.sp.rest ? it.sp.rest : it.note.split('・').map(function(s){ return s.trim(); }).filter(String);   /* 已經寫在規格鈕上的那一段不重複 */
   return {info: segs.filter(function(s){ return !WARN_RE.test(s); }), warn: segs.filter(function(s){ return WARN_RE.test(s); })};
 }
-function metaText(it, showCat){                              /* 品名下面那一行：分類（搜尋時）・單一規格・待報價・一般說明 */
-  const a = [];
+/* 品名下面那一行的材料：一般說明、每單位的內容（125 g／包）、警語。列表和彈窗共用，寫法才會一樣 */
+function leadParts(it){
+  const p = noteParts(it);
+  const per = perUnit(it) || (it.sp && it.sp.lead && !it.sp.paren && unitOf(it) ? it.sp.lead + '／' + unitOf(it) : '');
+  return {info: p.info.filter(function(x){ return !per || per.indexOf(x) !== 0; }), per:per, warn:p.warn};   /* 已經寫成「125 g／包」的那一段不重複 */
+}
+function metaText(it, showCat){                              /* 列表：分類（搜尋時）・待報價・一般說明・每單位。例：四物・125 g／包 */
+  const a = [], L = leadParts(it), single = !it.off && !it.weight && !it.choice && it.specs.length === 1;
   if(showCat) a.push(it.cat);
-  if(it.pending) a.push(PENDING);
-  if(!it.off && !it.weight && !it.choice && it.specs.length === 1) a.push(it.specs[0]);   /* 單一規格寫在這裡，數量鈕旁邊就不必再放單位 */
-  return a.concat(noteParts(it).info).join('・');
+  if(it.pending && !it.mto) a.push(PENDING);
+  if(single && !L.per) a.push(it.specs[0]);                  /* 說明裡沒寫每單位的內容：照舊寫規格（1 包），讓人知道數量的單位 */
+  return a.concat(L.info, single && L.per ? [L.per] : []).join('・');
 }
 /* 單一規格品項「每單位」的說明：125 g／包、每盒 10 入、1 單位＝100 個……取自品項說明，沒有就回傳空字串（只是換個寫法，不是新資料） */
 const MEASURE_RE = /^約?\s*[\d.,]+(\s*[–\-~～]\s*[\d.,]+)?\s*(g|kg|cc|ml|mL|公克|公斤)$/;
@@ -818,7 +890,7 @@ function perUnit(it){
 }
 /* 秤重規格的實際重量。規格重量不是價格：1 斤＝600 g、1 兩＝37.5 g、1 錢＝3.75 g */
 const unitOf = function(it){ return it.unit && it.unit !== '待確認' ? it.unit : ''; };
-const weightLabel = function(s, n){ return s === '一斤' && n > 1 ? n + ' 斤' : s; };
+const weightLabel = function(s, n){ return s === JIN ? n + '斤' : s; };   /* 1斤、2斤、3斤；半斤、四兩照規格名稱 */
 function gramsText(g){ g = Math.round(g * 100) / 100; const p = String(g).split('.'); return p[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',') + (p[1] ? '.' + p[1] : '') + ' g'; }
 function weightText(c){
   const m = /^(\d+)\s*錢$/.exec(c.s), g = LIANG[c.s] ? LIANG[c.s] * c.n * 37.5 : m ? Number(m[1]) * c.n * 3.75 : 0;
@@ -848,8 +920,8 @@ function chips(it){
   if(it.multi){
     const big = !!c && c.n > 1;
     if(moreOpen[it.code] || big){
-      [2, 3].forEach(function(n){ h += chip('jin', 'data-n="' + n + '"', !!c && c.s === '一斤' && c.n === n, n + ' 斤'); });
-      if(c && c.n > 3) h += chip('noop', '', true, c.n + ' 斤');
+      [2, 3].forEach(function(n){ h += chip('jin', 'data-n="' + n + '"', !!c && c.s === JIN && c.n === n, n + '斤'); });
+      if(c && c.n > 3) h += chip('noop', '', true, c.n + '斤');
     }else h += '<button type="button" class="chip more" data-k="more" aria-expanded="false">更多份量</button>';   /* 文字鈕；向下箭頭由 CSS 畫 */
   }
   return h;
@@ -865,7 +937,7 @@ function buyHTML(it, inDetail){                              /* 選購操作：�
 }
 function itemHTML(it, mode, showCat){
   const on = cart[it.code] ? ' on' : '', meta = metaText(it, showCat);
-  const ask = it.askOnly ? '<div class="meta">想要的做法、材料請寫在備註。</div>' : '';
+  const ask = it.mto ? '<div class="meta">' + inquiryHTML(it) + '</div>' : it.askOnly ? '<div class="meta">想要的做法、材料請寫在備註。</div>' : '';
   if(mode === 'card'){
     return '<article class="pcard' + on + (it.choice ? ' wide' : '') + '" data-code="' + it.code + '" data-mode="card">' + photo(it) + '<div class="body">' + nameBtn(it) +
       (meta ? '<div class="meta' + (it.choice ? '' : ' c3') + '">' + esc(meta) + '</div>' : '') + warnHTML(it) + ask + '</div>' + buyHTML(it) + '</article>';
@@ -879,21 +951,24 @@ function itemHTML(it, mode, showCat){
 function groupHTML(list, mode, showCat){ return '<div class="' + (mode === 'card' ? 'grid' : 'rows') + '">' + list.map(function(it){ return itemHTML(it, mode, showCat); }).join('') + '</div>'; }
 function catHTML(c, full){
   const mode = CARD_CATS.indexOf(c) >= 0 ? 'card' : 'row';
-  const mains = ITEMS.filter(function(it){ return it.cat === c; }), also = ITEMS.filter(function(it){ return it.cat2 === c; });
+  const mains = ITEMS.filter(function(it){ return it.cat === c; }), also = ITEMS.filter(function(it){ return it.also.indexOf(c) >= 0; });
+  const related = full ? CATS.flatMap(function(home){ return also.filter(function(it){ return it.cat === home; }); }) : [];
   let h = '<section class="sec"><h2>' + esc(c) + '</h2>';
-  if(mains.some(function(it){ return it.sub; })){              /* 有小類：依小類分組（順序＝在品項表第一次出現的順序），沒填小類的放最後「其他」 */
+  if(c === '熱紅酒包'){
+    const finished = mains.filter(function(it){ return it.mto; });
+    const materials = mains.filter(function(it){ return !it.mto; }).concat(related);
+    if(finished.length) h += '<p class="mto-info">熱紅酒包為接單後製作，非現貨。</p>' +
+      '<h3 class="subh">成品（接單製作）</h3>' + groupHTML(finished, mode, false);
+    if(materials.length) h += '<h3 class="subh">材料</h3>' + groupHTML(materials, mode, false);
+  }else if(mains.some(function(it){ return it.sub; })){        /* 有小類：依小類分組（順序＝在品項表第一次出現的順序），沒填小類的放最後「其他」 */
     const subs = [];
     mains.forEach(function(it){ if(it.sub && subs.indexOf(it.sub) < 0) subs.push(it.sub); });
     if(mains.some(function(it){ return !it.sub; })) subs.push('');
     subs.forEach(function(s){ h += '<h3 class="subh">' + esc(s || OTHER_SUB) + '</h3>' + groupHTML(mains.filter(function(it){ return it.sub === s; }), mode, false); });
-  }else if(mains.length) h += groupHTML(mains, mode, false);
-  if(also.length && full){                                     /* 副分類掛進來的品項：依它原本的大分類分組，同一個代碼、同一個清單狀態 */
-    CATS.forEach(function(home){
-      const g = also.filter(function(it){ return it.cat === home; });
-      if(g.length) h += '<h3 class="subh">' + esc(home) + '</h3>' + groupHTML(g, 'row', false);
-    });
-  }else if(also.length){                                       /* 「全部」畫面不重複列，放一列入口 */
-    h += '<button type="button" class="lrow" data-go="' + esc(c) + '"><span>還有 ' + also.length + ' 項相關品項（' + esc(also.slice(0, 3).map(function(it){ return it.name; }).join('、')) + (also.length > 3 ? '…' : '') + '）</span><span class="arr" aria-hidden="true">›</span></button>';
+    if(related.length) h += '<h3 class="subh">其他相關材料</h3>' + groupHTML(related, 'row', false);
+  }else if(mains.length || related.length) h += groupHTML(mains.concat(related), mains.length ? mode : 'row', false);
+  if(also.length && !full){                                    /* 「全部」畫面不重複列，放一列入口 */
+    h += '<button type="button" class="lrow go" data-go="' + esc(c) + '"><span>還有 ' + also.length + ' 項相關品項（' + esc(also.slice(0, 3).map(function(it){ return it.name; }).join('、')) + (also.length > 3 ? '…' : '') + '）</span><span class="arr" aria-hidden="true">›</span></button>';
   }
   return h + '</section>';
 }
@@ -921,15 +996,26 @@ function refreshItem(code, focusSel){
   redrawing = false;
 }
 function renderCats(){
-  const mk = function(c){ return '<button type="button" class="cat" data-cat="' + esc(c) + '" aria-pressed="' + (c === curCat && !kw.trim()) + '">' + esc(c) + '</button>'; };
-  const all = mk('全部') + CATS.map(mk).join('');             /* 依目錄動態產生，後端新增的分類會自己出現 */
-  $('cats').innerHTML = all; $('catGrid').innerHTML = all;
+  const mk = function(c, label, cls){ return '<button type="button" class="cat' + (cls || '') + '" data-cat="' + esc(c) + '" aria-pressed="' + (c === curCat && !kw.trim()) + '">' + esc(label || c) + '</button>'; };
+  $('cats').innerHTML = mk('全部') + CATS.map(function(c){ return mk(c); }).join('');   /* 橫列：依目錄動態產生，後端新增的分類會自己出現 */
+  /* 全部分類彈窗：「全部品項」＋三個分組。每個分類一定會出現一次；不在分組表裡的新分類排進最後一組 */
+  const known = {}; CAT_GROUPS.forEach(function(g){ g[1].forEach(function(c){ known[c] = true; }); });
+  let h = '<div class="catgrid">' + mk('全部', '全部品項', ' all') + '</div>';
+  CAT_GROUPS.forEach(function(g, i){
+    const list = CATS.filter(function(c){ return g[1].indexOf(c) >= 0 || (i === CAT_GROUPS.length - 1 && !known[c]); });
+    if(list.length) h += '<section class="cgroup"><h3>' + esc(g[0]) + '</h3><div class="catgrid">' + list.map(function(c){ return mk(c); }).join('') + '</div></section>';
+  });
+  $('catGrid').innerHTML = h;
 }
 function showCurCat(){                                       /* 把選中的分類捲到橫列中間 */
   const box = $('cats'), a = box.querySelector('[aria-pressed="true"]');
   if(a) box.scrollLeft = Math.max(0, a.offsetLeft - (box.clientWidth - 32 - a.offsetWidth) / 2);
 }
-function renderBar(){ $('openCart').textContent = '查看訂購清單（' + count() + ' 項）'; }
+function renderBar(){                                        /* 項數＝已選的品項種類數（不是總件數），算法沒變 */
+  const n = count();
+  $('cartCount').textContent = n + ' 項';
+  $('openCart').setAttribute('aria-label', '查看訂購清單，已選 ' + n + ' 項');
+}
 
 /* ================= 彈窗（全部分類、品項詳情、照片放大） =================
    共用：遮罩、關閉鈕、Esc、手機返回鍵都能關；開著的時候背景不捲動、焦點留在彈窗裡；關掉後焦點回到原來的地方。 */
@@ -986,23 +1072,23 @@ function detailBuy(it){                                      /* 單一規格：�
 }
 function renderDetail(){
   const it = BY[detailCode]; if(!it) return;
-  const p = noteParts(it), st = IMG[it.code];
+  const p = leadParts(it), st = IMG[it.code];
   /* 照片區固定 200px 高、完整顯示；沒有照片就不留空位，只在代碼那一行下面寫「暫無照片」 */
   let h = st === 'miss' ? '' : '<button type="button" class="dphoto" data-zoom="' + it.code + '" aria-label="放大 ' + esc(it.name) + ' 照片"><img src="' + IMG_DIR + it.code + '.jpg" alt="" data-ph="' + it.code + '"' + (st === 'ok' ? ' class="ok"' : '') + '></button>';
   h += '<h3 class="dname" id="detailName">' + esc(it.name) + '</h3>';
   p.warn.forEach(function(w){ h += '<div class="warn">' + esc(w) + '</div>'; });                 /* 警語緊接品名、完整顯示 */
-  h += '<div class="dcode">' + esc(it.code) + '・' + esc(it.cat) + (it.cat2 ? '、' + esc(it.cat2) : '') + '</div>';
+  h += '<div class="dcode">' + esc(it.code) + '・' + esc([it.cat].concat(it.also).join('、')) + '</div>';
   h += '<div class="dnone" id="detailNone"' + (st === 'miss' ? '' : ' hidden') + '>暫無照片</div>';
-  if(it.pending) h += '<div class="dspec">' + PENDING + '</div>';
+  if(it.mto) h += '<div class="dspec">' + inquiryHTML(it) + '</div><p class="mto-info">此品項為接單後製作，非現貨。<br>' + esc(mtoLead) + '</p>';
+  else if(it.pending) h += '<div class="dspec">' + PENDING + '</div>';
   /* 不再寫「可訂規格：…」（和下面的規格鈕重複）。有資料時只寫每單位的內容：125 g／包、110 g／份 */
-  const per = perUnit(it) || (it.sp && it.sp.lead && !it.sp.paren && unitOf(it) ? it.sp.lead + '／' + unitOf(it) : '');
-  const info = p.info.filter(function(x){ return !per || per.indexOf(x) !== 0; });                /* 已經寫成「125 g／包」的那一段不重複 */
+  const per = p.per, info = p.info;
   const brief = !it.askOnly && textUnits(info.join('・')) <= 22;                                    /* 說明很短：直接寫在這一行（四物・125 g／包），不另開「商品說明」區塊 */
   const lead = (brief ? info : []).concat(per ? [per] : []).join('・');
   if(lead) h += '<div class="dspec">' + esc(lead) + '</div>';
   const ing = it.ing.split(/[、,，\n]/).map(function(s){ return s.trim(); }).filter(String);
-  if(ing.length) h += '<section class="dsec"><h3>成分</h3><ul class="ing">' + ing.map(function(s){ return '<li>' + esc(s) + '</li>'; }).join('') + '</ul><p class="help">只列藥材名稱，排列順序與用量無關。</p></section>';
-  if((info.length && !brief) || it.askOnly) h += '<section class="dsec"><h3>商品說明</h3>' + (info.length ? '<p>' + esc(info.join('・')) + '</p>' : '') + (it.askOnly ? '<p>想要的做法、材料請寫在備註。</p>' : '') + '</section>';
+  if(ing.length) h += '<section class="dsec"><h3>成分</h3><div class="ingbox"><ul class="ing">' + ing.map(function(s){ return '<li>' + esc(s) + '</li>'; }).join('') + '</ul></div><p class="ingnote">只列藥材名稱，排列順序與用量無關。</p></section>';
+  if((info.length && !brief) || (it.askOnly && !it.mto)) h += '<section class="dsec"><h3>商品說明</h3>' + (info.length ? '<p>' + esc(info.join('・')) + '</p>' : '') + (it.askOnly && !it.mto ? '<p>想要的做法、材料請寫在備註。</p>' : '') + '</section>';
   $('detailBody').innerHTML = h + detailBuy(it);
   syncMore();
 }
@@ -1034,7 +1120,7 @@ function applyBuy(b){                                        /* 列表與彈窗�
   let focusSel = '[data-k="' + k + '"]';
   if(k === 'pick'){ const s = b.dataset.s; if(!specOK(it, s)) return null; cart[code] = {s:s, n: c ? c.n : 1}; focusSel = '[data-k="pick"][data-s="' + s + '"]'; }   /* 換規格：數量保留；第一次選：立即選入 1 */
   else if(k === 'spec'){ const s = b.dataset.s; if(c && c.s === s && c.n === 1) delete cart[code]; else cart[code] = {s:s, n:1}; focusSel = '[data-k="spec"][data-s="' + s + '"]'; }
-  else if(k === 'jin'){ const n = Number(b.dataset.n); if(c && c.s === '一斤' && c.n === n) delete cart[code]; else cart[code] = {s:'一斤', n:n}; moreOpen[code] = true; focusSel = '[data-k="jin"][data-n="' + n + '"]'; }
+  else if(k === 'jin'){ const n = Number(b.dataset.n); if(c && c.s === JIN && c.n === n) delete cart[code]; else cart[code] = {s:JIN, n:n}; moreOpen[code] = true; focusSel = '[data-k="jin"][data-n="' + n + '"]'; }
   else if(k === 'more'){ moreOpen[code] = true; focusSel = '[data-k="jin"]'; }
   else if(k === 'inc'){ setCount(it, (c ? c.n : 0) + 1); }
   else if(k === 'dec'){ setCount(it, (c ? c.n : 0) - 1); }
@@ -1045,12 +1131,12 @@ function applyBuy(b){                                        /* 列表與彈窗�
 
 /* ================= 畫面：訂購清單 ================= */
 /* 每一行左邊寫「訂的是什麼規格」，右邊是數量控制，同一件事不寫兩次：
-     秤重品項   半斤（300 g）、2 斤（1,200 g）——實際訂購重量；右邊只有 −／＋（沿用重量階梯），不放容易誤會成份數的數字
+     秤重品項   半斤（300 g）、2斤（1,200 g）——實際訂購重量；右邊只有 −／＋（沿用重量階梯），不放容易誤會成份數的數字
      多規格品項 大顆鮮人參／包、600 g／份
      單一規格   125 g／包（品項說明有寫才有）；沒有就寫「以包計」 */
 function lineDesc(it, c){
   if(it.weight) return weightText(c);
-  if(it.askOnly) return c.s;
+  if(it.askOnly) return it.mto ? '以包計' : c.s;
   const u = unitOf(it);
   if(it.choice){ const i = it.specs.indexOf(c.s); return (it.sp.paren && i >= 0 ? it.sp.names[i] : c.s) + (u ? '／' + u : ''); }
   return perUnit(it) || (u ? '以' + u + '計' : c.s);
@@ -1058,6 +1144,10 @@ function lineDesc(it, c){
 const TRASH = '<svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 4.5h12M7 4.5V3h4v1.5M4.5 4.5l.7 10.5h7.6l.7-10.5M7.5 7.5v5M10.5 7.5v5"/></svg>';
 function renderLines(){
   const codes = ITEMS.filter(function(it){ return cart[it.code]; }).map(function(it){ return it.code; });
+  const hasMto = codes.some(function(code){ return BY[code].mto; });
+  $('mtoCartLead').hidden = !hasMto;
+  $('mtoCartLead').textContent = hasMto ? mtoLead : '';
+  $('i-memo').placeholder = hasMto ? MTO_PROMPT : '例：7-11 店到店（○○門市）、希望週三前到';
   $('cartHead').textContent = '已選 ' + codes.length + ' 項';
   if(!codes.length){
     $('lines').innerHTML = '<p class="empty" style="padding:8px 0 16px">清單還沒有商品</p><button class="sub" type="button" data-k="goList">返回選購</button>';
@@ -1065,9 +1155,9 @@ function renderLines(){
     /* 這一頁不算、也不顯示任何金額；運費等嘉榮鎖定報價時才計算 */
     $('lines').innerHTML = codes.map(function(code){
       const it = BY[code], c = cart[code];
-      const atMax = it.weight ? (c.s === '一斤' && it.multi ? c.n >= MAX_JIN : it.specs.indexOf(c.s) === it.specs.length - 1 && !it.multi) : c.n >= MAX_QTY;
+      const atMax = it.weight ? (c.s === JIN && it.multi ? c.n >= MAX_JIN : it.specs.indexOf(c.s) === it.specs.length - 1 && !it.multi) : c.n >= MAX_QTY;
       const what = it.weight ? '份量' : '數量';
-      return '<div class="line" data-code="' + code + '"><div class="nm2">' + esc(it.name) + (it.pending ? '<span class="pend">' + PENDING + '</span>' : '') + '</div>' +
+      return '<div class="line" data-code="' + code + '"><div class="nm2">' + esc(it.name) + (it.mto ? '<span class="pend">' + inquiryHTML(it) + '</span>' : it.pending ? '<span class="pend">' + PENDING + '</span>' : '') + '</div>' +
         '<div class="l2"><span class="sq" aria-live="polite">' + esc(lineDesc(it, c)) + '</span><div class="ops"><div class="step on' + (it.weight ? ' two' : '') + '"><button type="button" data-k="dec" aria-label="減少' + what + ' ' + esc(it.name) + '">−</button>' +
         (it.weight ? '' : '<span class="n" aria-live="polite">' + c.n + '</span>') + '<button type="button" data-k="inc" aria-label="增加' + what + ' ' + esc(it.name) + '"' + (atMax ? ' disabled' : '') + '>＋</button></div>' +
         '<button type="button" class="rmbtn" data-k="rm" aria-label="移除商品 ' + esc(it.name) + '" title="移除商品">' + TRASH + '</button></div></div></div>';
@@ -1128,7 +1218,8 @@ function validate(){
 function payload(){
   const v = function(k){ return $('i-' + k).value.trim(); };
   const other = $('d-other').checked;
-  const items = ITEMS.filter(function(it){ return cart[it.code]; }).map(function(it){ const c = cart[it.code]; return {code:it.code, name:it.name, spec:c.s, qty:c.n, unit:it.unit, cat:it.cat}; });
+  /* 規格照「後端給品項清單時的寫法」送回去：新版後端就是「1斤」；萬一後端還是舊版（寫「一斤」），照它的寫法送，單才收得進去 */
+  const items = ITEMS.filter(function(it){ return cart[it.code]; }).map(function(it){ const c = cart[it.code]; return {code:it.code, name:it.name, spec:it.raw[c.s] || c.s, qty:c.n, unit:it.unit, cat:it.cat}; });
   return {action:'order', clientId:clientId, pharmacy:v('pharmacy'), contact:v('contact'), phone:v('phone'), address:v('address'),
     delivery: other ? '其他' : '郵局', deliveryMethod: other ? (v('method') || '7-11 店到店') : '', deliveryInfo: other ? v('dinfo') : '', memo:receiptMemo(v('memo')), pageUrl:pageUrl(),
     items:items, codeLine: items.map(function(x){ return x.code + 'x' + codeQty(BY[x.code], cart[x.code]); }).join(','), website:$('i-website').value};
@@ -1275,20 +1366,22 @@ function startQuote(token){
   if(qLast3) openQuote();                                    /* 這台裝置認得：不用再輸入 */
 }
 
-/* ================= 藥膳用量試算（r2） =================
+/* ================= 藥膳用量試算 =================
    配方不在這個檔案裡，也不會下載到瀏覽器。這一頁只向後端要兩樣東西：
      1. 可試算的配方名稱（GET ?action=recipes）
-     2. 填好帖數之後，每味藥材的「建議訂購規格 × 數量」（POST action:'calc'，v:2）
-   後端不回傳總量（錢數、公克數、顆數）。沒有散裝品項、以顆數計換不出重量、或超過線上可訂的量，後端回「請洽嘉榮」。
+     2. 填好帖數之後，每味藥材的「建議訂購規格 × 數量」（POST action:'calc'，v:3）
+   後端回傳建議規格或總個數，無法取秤重規格或超過線上可訂的量則回「請洽嘉榮」；
+   相容舊後端的「包內附／請洽嘉榮」。用約略的每兩顆數換算的，建議量標「約」。
    有兩個檔次的藥材由藥師選；選好的檔次送回後端重算（因為兩味可能併成同一個品項）。 */
 const CALC_KEY = 'pharmacyCalcV1';         /* 帖數、選過的檔次、上一次試算加進清單的品項 */
 const RECIPES_KEY = 'pharmacyRecipesV1';   /* 配方名稱清單（只有名稱） */
-const MAX_TIE = 999, ASK_WHO = '請洽嘉榮', ASK_MARK = '【試算另洽】';
-const ASK_WHY = {none:'目前沒有散裝品項', count:'這味以顆數計，線上換算不了重量', over:'超過線上可以訂的量'};
+const MAX_TIE = 999, ASK_WHO = '請洽嘉榮', ASK_PACK = '包內附／請洽嘉榮', ASK_MARK = '【試算另洽】';
+const ASK_WHY = {none:'目前沒有散裝品項', count:'這味以顆、支、片計，線上換算不了重量', over:'超過線上可以訂的量', pack:'目錄沒有這一項。向嘉榮訂成包時會附在包內；要自己分裝' + ASK_WHO};
 let RECIPES = [], recipesState = '', calcN = {}, calcPick = {}, calcApplied = [], calcRes = null, calcBusy = false, calcSeq = 0;
 function validRecipes(l){ return Array.isArray(l) && l.every(function(x){ return x && typeof x.name === 'string' && x.name; }); }
 function calcLoad(){
-  try{ const s = JSON.parse(localStorage.getItem(CALC_KEY) || '{}'); calcN = s.n || {}; calcPick = s.pick || {}; calcApplied = Array.isArray(s.applied) ? s.applied : []; }catch(e){}
+  try{ const s = JSON.parse(localStorage.getItem(CALC_KEY) || '{}'); calcN = s.n || {}; calcPick = s.pick || {};
+    calcApplied = (Array.isArray(s.applied) ? s.applied : []).map(function(a){ return {code:a.code, s:normSpec(a.s), n:a.n, ps:a.ps ? normSpec(a.ps) : '', pn:a.pn}; }); }catch(e){}
   try{ const r = JSON.parse(localStorage.getItem(RECIPES_KEY) || 'null'); if(validRecipes(r)) RECIPES = r; }catch(e){}
 }
 function calcSave(){ try{ localStorage.setItem(CALC_KEY, JSON.stringify({n:calcN, pick:calcPick, applied:calcApplied})); }catch(e){} }
@@ -1352,7 +1445,7 @@ async function runCalc(auto){
   if(calcBusy || !items.length) return;
   const seq = ++calcSeq;
   calcBusy = true; syncCalcRun(); $('calcFail').hidden = true; $('calcStale').hidden = true;
-  const d = await api({action:'calc', v:2, items:items, picks:calcPick});
+  const d = await api({action:'calc', v:3, items:items, picks:calcPick});
   calcBusy = false; syncCalcRun();
   if(seq !== calcSeq) return;                                 /* 等待的時候帖數又改了：這份結果作廢 */
   if(!d || !d.ok || !Array.isArray(d.lines)){
@@ -1360,9 +1453,10 @@ async function runCalc(auto){
     if(d && d.error && d.error.indexOf('重新整理') >= 0) refreshRecipes();   /* 配方剛被改過：把清單換新 */
     return;
   }
-  if(d.v !== 2 || d.lines.some(function(L){ return !L || ['item','pick','ask'].indexOf(L.k) < 0; })){   /* 後端還是舊版：不採用舊格式的內容 */
+  if(d.v !== 3 || d.lines.some(function(L){ return !L || ['item','pick','ask','count'].indexOf(L.k) < 0; })){   /* 後端還是舊版：不採用舊格式的內容 */
     calcFailed('試算功能更新中，請稍後再試，或直接' + ASK_WHO + '。'); return;
   }
+  d.lines.forEach(function(L){ if(L.k === 'item') L.spec = normSpec(L.spec); });
   calcRes = {lines:d.lines, items:items};
   $('calcNote').hidden = true; $('calcToCart').hidden = true;
   renderCalc(); syncCalcRun();
@@ -1374,7 +1468,7 @@ function specQian(s){ if(LIANG[s]) return LIANG[s] * 10; const m = /^(\d+)\s*錢
 function fitSpec(it, need){                                  /* 取不到回傳 null */
   const caps = it.specs.map(function(s){ return {s:s, q:specQian(s)}; }).filter(function(x){ return x.q > 0; }).sort(function(a, b){ return a.q - b.q; });
   for(let i = 0; i < caps.length; i++) if(caps[i].q >= need - 1e-6) return {s:caps[i].s, n:1};
-  if(it.multi){ const n = Math.ceil((need - 1e-6) / 160); if(n <= MAX_JIN) return {s:'一斤', n:n}; }
+  if(it.multi){ const n = Math.ceil((need - 1e-6) / 160); if(n <= MAX_JIN) return {s:JIN, n:n}; }
   return null;
 }
 const lineItem = function(L){ const it = L.code ? BY[L.code] : null; return it && !it.off && it.weight ? it : null; };
@@ -1389,7 +1483,7 @@ function pickRow(herb, opts, cur){
   }).join('') + '</div>';
 }
 const picksHTML = function(L){ return (L.picks || []).map(function(p){ return pickRow(p.herb, p.opts || [], L.code); }).join(''); };   /* 已經算好的行：目前用的檔次＝這一行的品項 */
-function renderCalc(){                                       /* 每一味：品名靠左、建議訂購量靠右。只有「可訂的規格」，沒有需要量 */
+function renderCalc(){                                       /* 每一味：品名靠左、建議規格或總個數靠右 */
   const has = !!calcRes;
   $('calcOut').hidden = !has; $('calcAdd').hidden = !has;
   if(!has){ $('calcNote').hidden = true; $('calcToCart').hidden = true; return; }
@@ -1405,18 +1499,27 @@ function renderCalc(){                                       /* 每一味：品�
     const it = lineItem(L);
     if(lineOK(L)){
       nAdd++;
-      const w = weightLabel(L.spec, L.qty);                    /* 一斤、2 斤、半斤、四兩：實際要訂的重量，不寫「× 1」 */
-      return '<div class="cline" data-code="' + L.code + '">' + row(it.name, herbsNote(L, it), '<div class="sug" aria-label="建議訂購 ' + esc(w) + '">' + esc(w) + '</div>') +
-        (L.partial ? '<div class="help">另有以顆數計的部分沒有算進去，' + ASK_WHO + '。</div>' : '') + picksHTML(L) + '</div>';
+      const w = weightLabel(L.spec, L.qty);                    /* 1斤、2斤、半斤、四兩：實際要訂的重量，不寫「× 1」 */
+      return '<div class="cline" data-code="' + L.code + '">' + row(it.name, herbsNote(L, it), '<div class="sug" aria-label="建議訂購 ' + (L.approx ? '約 ' : '') + esc(w) + '">' + (L.approx ? '<span class="apx">約</span>' : '') + esc(w) + '</div>') +
+        (L.approx ? '<div class="help">以顆、片計的部分用約略的個數換算成重量，建議量是約略值。</div>' : '') +
+        (L.partial ? '<div class="help">另有以顆、支、片計的部分沒有算進去，' + ASK_WHO + '。</div>' : '') + picksHTML(L) + '</div>';
     }
+    if(L.k === 'count'){                                 /* 按配方的計數單位顯示總量，透過備註洽詢 */
+      const q = Number(L.qty) + ' ' + String(L.unit || '');
+      return '<div class="cline">' + row(it ? it.name : (L.herbs || []).join('、'), it ? herbsNote(L, it) : '', '<div class="sug" aria-label="建議訂購 ' + esc(q) + '">' + esc(q) + '</div>') + '<div class="help">若可將建議量加入清單，且訂單備註空間足夠，系統會一併寫入這個數量。</div>' + picksHTML(L) + '</div>';
+    }
+    const pack = L.k === 'ask' && L.why === 'pack';
     const why = L.k === 'ask' ? (ASK_WHY[L.why] || ASK_WHY.none) : '這個品項目前不能線上訂';
-    return '<div class="cline">' + row(it ? it.name : (L.herb || (L.herbs || []).join('、')), it ? herbsNote(L, it) : '', '<div class="cask">' + ASK_WHO + '</div>') + '<div class="help">' + why + '，不會加入清單。</div>' + picksHTML(L) + '</div>';
+    return '<div class="cline">' + row(it ? it.name : (L.herb || (L.herbs || []).join('、')), it ? herbsNote(L, it) : '', '<div class="cask">' + (pack ? ASK_PACK : ASK_WHO) + '</div>') + '<div class="help">' + why + '，不會加入清單。</div>' + picksHTML(L) + '</div>';
   }).join('');
   const btn = $('calcAdd');
   btn.disabled = !nAdd || nPick > 0;
   btn.textContent = nPick ? '還有 ' + nPick + ' 味要選檔次' : nAdd ? '將建議量加入清單（' + nAdd + ' 項）' : '沒有可以加入的品項';
 }
-function askName(L){ const it = lineItem(L); return it ? it.name : (L.herb || (L.herbs || []).join('、')); }
+function askName(L){                                        /* 寫進備註的名字；「建議訂幾個」的連個數一起寫，嘉榮才知道要備多少 */
+  const it = lineItem(L), nm = it ? it.name : (L.herb || (L.herbs || []).join('、'));
+  return L.k === 'count' ? nm + ' ' + Number(L.qty) + ' ' + String(L.unit || '') : nm;
+}
 function setAskMemo(names, items){                           /* 請洽嘉榮的藥材：寫一行到訂單備註（品名＋這次試算的帖數，沒有用量），嘉榮收單時看得到 */
   const box = $('i-memo');
   const rest = box.value.split('\n').filter(function(l){ return l.indexOf(ASK_MARK) !== 0; }).join('\n').trim();
@@ -1432,9 +1535,13 @@ function addCalc(){
   /* 上一次試算加進去的先拿掉（清單裡那一項沒被動過才拿），所以重按、改檔次再按，都不會重複加 */
   calcApplied.forEach(function(a){ const c = cart[a.code]; if(c && c.s === a.s && c.n === a.n){ if(a.ps && BY[a.code] && specOK(BY[a.code], a.ps)) cart[a.code] = {s:a.ps, n:a.pn}; else delete cart[a.code]; } });
   calcApplied = [];
-  let done = 0; const merged = [], skipped = [], asks = [];
+  let done = 0; const merged = [], skipped = [], asks = [], counts = [];
   calcRes.lines.forEach(function(L){
-    if(!lineOK(L)){ const n = askName(L); if(asks.indexOf(n) < 0) asks.push(n); return; }
+    if(!lineOK(L)){
+      const names = L.k === 'count' ? counts : asks, n = askName(L);
+      if(names.indexOf(n) < 0) names.push(n);
+      return;
+    }
     const it = BY[L.code], cur = cart[L.code]; let put = {s:L.spec, n:L.qty};
     if(cur){                                                 /* 清單裡本來就有：兩邊的量加起來，重新取規格 */
       put = fitSpec(it, specQian(cur.s) * cur.n + specQian(L.spec) * L.qty);
@@ -1445,12 +1552,14 @@ function addCalc(){
     calcApplied.push({code:L.code, s:put.s, n:put.n, ps:cur ? cur.s : '', pn:cur ? cur.n : 0});
     done++;
   });
-  const memoOK = setAskMemo(asks, calcRes.items);
+  const memoOK = setAskMemo(asks.concat(counts), calcRes.items);
   touchCart(); calcSave(); renderBar();
   const P = ['<p class="okline">已將 ' + done + ' 項加入訂購清單。</p>'];                 /* 成功與例外分行寫，品名不省略 */
   if(merged.length) P.push('<p>清單裡原本就有、已合併：' + esc(merged.join('、')) + '。</p>');
   if(skipped.length) P.push('<p>超過線上可以訂的量、沒有加入：' + esc(skipped.join('、')) + '，' + ASK_WHO + '。</p>');
-  if(asks.length) P.push('<p>' + ASK_WHO + '、沒有加入的 ' + asks.length + ' 味：' + esc(asks.join('、')) + '。' + (memoOK ? '已寫進訂單備註，送單時會一起帶給嘉榮。' : '備註放不下，請另外用 LINE 告訴嘉榮。') + '</p>');
+  if(asks.length) P.push('<p>' + ASK_WHO + '：' + esc(asks.join('、')) + '。</p>');
+  if(counts.length) P.push('<p>按個數確認：' + esc(counts.join('、')) + '。</p>');
+  if(asks.length || counts.length) P.push('<p>' + (memoOK ? '已寫進訂單備註，送單時會一起帶給嘉榮。' : '備註放不下，請另外用 LINE 告訴嘉榮。') + '</p>');
   P.push('<p>再按一次會以最新的試算結果為準，不會重複加入。</p>');
   note.hidden = false; note.innerHTML = P.join('');
   $('calcToCart').hidden = false;
